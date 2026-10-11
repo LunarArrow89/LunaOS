@@ -804,6 +804,7 @@ let runtimeWindow = null, runtimeCanvas = null, runtimeContext = null, runtimeLo
 let runtimeScene = [], runtimeBackground = "#000000", runtimeHeldKeys = new Set(), runtimeMovementStarted = false, runtimeLastFrame = 0;
 let runtimeSquareSettings = {x:100,y:100,size:40,speed:3.5};
 const PROJECTS_KEY = "delta-projects";
+const PROJECT_NAME_KEY = "delta-project-name";
 function safeStorageGet(key, fallback = null) {
   try { return localStorage.getItem(key) ?? fallback; } catch (_) { return fallback; }
 }
@@ -811,7 +812,10 @@ function safeStorageSet(key, value) {
   try { localStorage.setItem(key, value); return true; } catch (_) { return false; }
 }
 function getProjects() {
-  try { return JSON.parse(safeStorageGet(PROJECTS_KEY, "{}") || "{}"); } catch (_) { return {}; }
+  try {
+    const parsed = JSON.parse(safeStorageGet(PROJECTS_KEY, "{}") || "{}");
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch (_) { return {}; }
 }
 function refreshProjects(selected = "") {
   const projects = getProjects();
@@ -824,13 +828,19 @@ function saveCurrentProject() {
   projectName.value = name;
   const projects = getProjects();
   projects[name] = editor.value;
-  safeStorageSet(PROJECTS_KEY, JSON.stringify(projects));
-  safeStorageSet("delta-code", editor.value);
-  saveStatus.textContent = "Autosaved";
+  const projectsSaved = safeStorageSet(PROJECTS_KEY, JSON.stringify(projects));
+  const codeSaved = safeStorageSet("delta-code", editor.value);
+  const nameSaved = safeStorageSet(PROJECT_NAME_KEY, name);
+  if (!projectsSaved || !codeSaved || !nameSaved) {
+    saveStatus.textContent = "Save failed — browser storage is unavailable or full";
+    return false;
+  }
   refreshProjects(name);
   saveStatus.textContent = "Saved: " + name;
+  return true;
 }
-refreshProjects();
+projectName.value = safeStorageGet(PROJECT_NAME_KEY, projectName.value) || projectName.value;
+refreshProjects(safeStorageGet(PROJECT_NAME_KEY, ""));
 
 const starterCode = `// Your first Delta program
 screen(640, 400)
@@ -839,7 +849,9 @@ text(:Hello!:)`
 
 const previousCode = safeStorageGet("delta-code", "") || "";
 editor.value = previousCode.includes('print("Welcome to Delta!")') ? starterCode : (previousCode || starterCode);
-safeStorageSet("delta-code", editor.value);
+if (!safeStorageSet("delta-code", editor.value)) {
+  saveStatus.textContent = "Storage unavailable — your code may not persist after closing";
+}
 
 function escapeHighlight(value) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -945,17 +957,17 @@ function updateEditorInfo() {
 }
 editor.addEventListener("input", () => {
   updateEditorInfo();
-  try {
-    safeStorageSet("delta-code", editor.value);
-    const name = projectName.value.trim() || "Untitled Project";
-    const projects = getProjects();
-    projects[name] = editor.value;
-    safeStorageSet(PROJECTS_KEY, JSON.stringify(projects));
-    refreshProjects(name);
-    saveStatus.textContent = "Autosaved: " + name;
-  } catch (error) {
-    saveStatus.textContent = "Could not save: " + error.message;
+  saveCurrentProject();
+  if (saveStatus.textContent.startsWith("Saved: ")) {
+    saveStatus.textContent = "Autosaved: " + (projectName.value.trim() || "Untitled Project");
   }
+});
+projectName.addEventListener("input", () => {
+  if (editor.value) saveCurrentProject();
+});
+window.addEventListener("pagehide", () => {
+  // Flush the most recent code when Delta is refreshed or closed.
+  saveCurrentProject();
 });
 editor.addEventListener("click", updateEditorInfo);
 editor.addEventListener("keyup", updateEditorInfo);
@@ -1484,6 +1496,7 @@ projectSelect.addEventListener("change", () => {
   const name = projectSelect.value, projects = getProjects();
   if (name && Object.prototype.hasOwnProperty.call(projects, name)) {
     projectName.value = name; editor.value = projects[name];
+    safeStorageSet(PROJECT_NAME_KEY, name);
     safeStorageSet("delta-code", editor.value); updateEditorInfo();
     saveStatus.textContent = "Loaded: " + name;
   }
