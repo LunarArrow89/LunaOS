@@ -957,6 +957,7 @@ function updateEditorInfo() {
 }
 editor.addEventListener("input", () => {
   updateEditorInfo();
+  saveActiveFile();
   saveCurrentProject();
   if (saveStatus.textContent.startsWith("Saved: ")) {
     saveStatus.textContent = "Autosaved: " + (projectName.value.trim() || "Untitled Project");
@@ -967,6 +968,7 @@ projectName.addEventListener("change", () => {
 });
 window.addEventListener("pagehide", () => {
   // Flush the most recent code when Delta is refreshed or closed.
+  saveActiveFile();
   saveCurrentProject();
 });
 editor.addEventListener("click", updateEditorInfo);
@@ -1521,6 +1523,78 @@ document.getElementById("resetButton").addEventListener("click", () => {
 // File sidebar actions
 const fileList = document.getElementById("fileList");
 const addFileButton = document.getElementById("addFileButton");
+const FILES_STORAGE_KEY = "delta-file-contents";
+let activeFileName = "main.delta";
+function getFileContents() {
+  try {
+    const parsed = JSON.parse(safeStorageGet(FILES_STORAGE_KEY, "{}") || "{}");
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch (_) { return {}; }
+}
+let fileContents = getFileContents();
+function persistFileContents() {
+  return safeStorageSet(FILES_STORAGE_KEY, JSON.stringify(fileContents));
+}
+function saveActiveFile() {
+  if (!activeFileName) return;
+  fileContents[activeFileName] = editor.value;
+  persistFileContents();
+}
+function setActiveFile(item) {
+  if (!item) return;
+  saveActiveFile();
+  activeFileName = item.dataset.file;
+  if (!Object.prototype.hasOwnProperty.call(fileContents, activeFileName)) {
+    fileContents[activeFileName] = activeFileName === "main.delta" ? editor.value : "";
+  }
+  editor.value = fileContents[activeFileName];
+  fileList.querySelectorAll(".file-item").forEach(file => file.classList.toggle("active", file === item));
+  const heading = document.querySelector(".editor-panel .panel-heading > div");
+  if (heading) heading.lastElementChild.textContent = activeFileName;
+  safeStorageSet("delta-code", editor.value);
+  updateEditorInfo();
+  saveStatus.textContent = "Editing " + activeFileName;
+  persistFileContents();
+}
+function persistFileOrder() {
+  safeStorageSet("delta-file-order", JSON.stringify(Array.from(fileList.querySelectorAll(".file-item"), item => item.dataset.file)));
+  persistFileContents();
+}
+function makeFileRow(name) {
+  const row = document.createElement("div");
+  row.className = "file-row";
+  const item = document.createElement("button");
+  item.type = "button";
+  item.className = "file-item";
+  item.dataset.file = name;
+  const icon = document.createElement("span");
+  icon.className = "file-icon delta-icon";
+  icon.textContent = "◆";
+  item.append(icon, document.createTextNode(" " + name));
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "delete-file-button";
+  remove.setAttribute("aria-label", "Delete " + name);
+  remove.title = "Delete " + name;
+  remove.textContent = "×";
+  row.append(item, remove);
+  return row;
+}
+function restoreFileList() {
+  fileContents = getFileContents();
+  if (!Object.prototype.hasOwnProperty.call(fileContents, "main.delta")) fileContents["main.delta"] = editor.value;
+  let order = [];
+  try { order = JSON.parse(safeStorageGet("delta-file-order", "[]") || "[]"); } catch (_) {}
+  if (!Array.isArray(order)) order = [];
+  order = [...new Set(["main.delta", ...order, ...Object.keys(fileContents)])]
+    .filter(name => name === "main.delta" || /^[A-Za-z0-9_-]+\\.delta$/i.test(name));
+  fileList.replaceChildren();
+  for (const name of order) fileList.appendChild(makeFileRow(name));
+  const main = fileList.querySelector('[data-file="main.delta"]');
+  if (main) main.classList.add("active");
+  activeFileName = "main.delta";
+  persistFileOrder();
+}
 let fileOptionsMenu = null;
 let fileOptionsTarget = null;
 
@@ -1565,14 +1639,21 @@ fileList.addEventListener("click", event => {
     const item = row?.querySelector(".file-item");
     if (!item || item.dataset.file === "main.delta") return;
     const name = item.dataset.file;
+    if (name === activeFileName) {
+      saveActiveFile();
+      activeFileName = "main.delta";
+      const main = fileList.querySelector('[data-file="main.delta"]');
+      if (main) setActiveFile(main);
+    }
+    delete fileContents[name];
     row.remove();
+    persistFileOrder();
     saveStatus.textContent = "Deleted " + name;
     return;
   }
   const item = event.target.closest(".file-item");
   if (!item) return;
-  fileList.querySelectorAll(".file-item").forEach(file => file.classList.toggle("active", file === item));
-  saveStatus.textContent = item.dataset.file === "main.delta" ? "Editing main.delta" : item.dataset.file + " — file connection coming soon";
+  setActiveFile(item);
 });
 fileList.addEventListener("dblclick", event => {
   const item = event.target.closest(".file-item");
@@ -1601,7 +1682,15 @@ document.addEventListener("click", event => {
   const name = item.dataset.file;
   const action = button.dataset.action;
   if (action === "delete" && name !== "main.delta") {
+    if (name === activeFileName) {
+      saveActiveFile();
+      activeFileName = "main.delta";
+      const main = fileList.querySelector('[data-file="main.delta"]');
+      if (main) setActiveFile(main);
+    }
+    delete fileContents[name];
     row.remove();
+    persistFileOrder();
     saveStatus.textContent = "Deleted " + name;
   } else if (action === "rename" && name !== "main.delta") {
     const requested = window.prompt("Rename Delta file:", name);
@@ -1614,18 +1703,25 @@ document.addEventListener("click", event => {
       } else {
         item.dataset.file = nextName;
         item.lastChild.textContent = " " + nextName;
+        fileContents[nextName] = fileContents[name] ?? "";
+        delete fileContents[name];
+        if (activeFileName === name) activeFileName = nextName;
+        persistFileOrder();
         saveStatus.textContent = "Renamed to " + nextName;
       }
     }
   } else if (action === "up" && row.previousElementSibling) {
     fileList.insertBefore(row, row.previousElementSibling);
+    persistFileOrder();
     saveStatus.textContent = "Moved " + name + " up";
   } else if (action === "down" && row.nextElementSibling) {
     fileList.insertBefore(row.nextElementSibling, row);
+    persistFileOrder();
     saveStatus.textContent = "Moved " + name + " down";
   }
   closeFileOptions();
 });
+restoreFileList();
 addFileButton.addEventListener("click", () => {
   const requestedName = window.prompt("New Delta file name (.delta):", "new-file.delta");
   if (requestedName === null) return;
@@ -1640,26 +1736,13 @@ addFileButton.addEventListener("click", () => {
     saveStatus.textContent = "That file already exists in the list";
     return;
   }
-  const row = document.createElement("div");
-  row.className = "file-row";
-  const item = document.createElement("button");
-  item.type = "button";
-  item.className = "file-item";
-  item.dataset.file = name;
-  const icon = document.createElement("span");
-  icon.className = "file-icon delta-icon";
-  icon.textContent = "◆";
-  item.append(icon, document.createTextNode(" " + name));
-  const remove = document.createElement("button");
-  remove.type = "button";
-  remove.className = "delete-file-button";
-  remove.setAttribute("aria-label", "Delete " + name);
-  remove.title = "Delete " + name;
-  remove.textContent = "×";
-  row.append(item, remove);
+  saveActiveFile();
+  fileContents[name] = "";
+  const row = makeFileRow(name);
   fileList.appendChild(row);
-  fileList.querySelectorAll(".file-item").forEach(file => file.classList.toggle("active", file === item));
-  saveStatus.textContent = name + " added to the file list";
+  setActiveFile(row.querySelector(".file-item"));
+  persistFileOrder();
+  saveStatus.textContent = name + " created";
 });
 
  
