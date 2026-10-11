@@ -56,7 +56,9 @@ function updateDock() {
     const button = document.createElement("button");
     button.textContent = "◇ " + record.title;
     button.title = "Show or minimize Delta-";
-    button.className = record.element.style.display !== "none" ? "selected" : "";
+    const isVisible = record.element.style.display !== "none";
+    button.className = isVisible ? "selected" : "minimized";
+    button.setAttribute("aria-label", isVisible ? record.title + " window is open" : record.title + " window is minimized");
     button.addEventListener("click", () => {
       if (record.element.style.display === "none") {
         record.element.style.display = "flex";
