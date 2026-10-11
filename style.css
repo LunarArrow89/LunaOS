@@ -222,3 +222,29 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   background: #c8bda9;
   opacity: 1;
 }
+
+
+/* Browser fullscreen mode for app windows, including the embedded Delta- app. */
+.app-window:fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: #fffaf1;
+}
+.app-window:fullscreen .window-content,
+.app-window:fullscreen .delta-content {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.app-window:fullscreen .delta-frame {
+  width: 100%;
+  height: 100%;
+}
