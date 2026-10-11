@@ -304,9 +304,27 @@ function closeApp(app) {
   updateDock();
 }
 
+function saveOpenWindows() {
+  try {
+    const saved = [...state.windows.entries()].map(([app, record]) => ({
+      app,
+      visible: record.element.style.display !== "none",
+      maximized: record.element.classList.contains("is-maximized"),
+      left: record.element.style.left,
+      top: record.element.style.top,
+      width: record.element.style.width,
+      height: record.element.style.height
+    }));
+    localStorage.setItem("lunaos-open-windows", JSON.stringify(saved));
+  } catch (error) {
+    // Window memory is optional if browser storage is unavailable.
+  }
+}
+
 function updateDock() {
   const holder = $("#openApps");
   holder.innerHTML = "";
+  saveOpenWindows();
   for (const [app, record] of state.windows) {
     const button = document.createElement("button");
     button.textContent = (record.glyph || "◇") + " " + record.title;
@@ -556,3 +574,39 @@ startRainAudio();
 setupRainEffects();
 document.addEventListener("pointerdown", startRainAudio, { once: true });
 document.addEventListener("keydown", startRainAudio, { once: true });
+
+// Restore app windows that were open when LunaOS was last refreshed.
+function restoreOpenWindows() {
+  let saved = [];
+  try {
+    saved = JSON.parse(localStorage.getItem("lunaos-open-windows") || "[]");
+  } catch (error) {
+    saved = [];
+  }
+  saved.forEach(item => {
+    if (!item || !["delta", "podcast"].includes(item.app)) return;
+    if (item.app === "delta") openDelta();
+    if (item.app === "podcast") openPodcast();
+    const record = state.windows.get(item.app);
+    if (!record) return;
+    const win = record.element;
+    if (item.maximized) {
+      win.classList.add("is-maximized");
+      if (item.app === "podcast") {
+        win.style.left = "0";
+        win.style.top = "0";
+        win.style.width = "100%";
+        win.style.height = "100%";
+      }
+    } else if (item.app === "podcast") {
+      win.classList.remove("is-maximized");
+      if (item.left) win.style.left = item.left;
+      if (item.top) win.style.top = item.top;
+      if (item.width) win.style.width = item.width;
+      if (item.height) win.style.height = item.height;
+    }
+    if (!item.visible) win.style.display = "none";
+  });
+  updateDock();
+}
+restoreOpenWindows();
