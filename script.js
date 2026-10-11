@@ -12,60 +12,6 @@ function enterLunaFullscreen() {
   }
 }
 
-function openRain() {
-  // Play the rain.mp3 file stored in this LunaOS repository.
-  enterLunaFullscreen();
-  let audio = document.querySelector("#lunaRainAudio");
-  const existing = state.windows.get("rain");
-
-  if (!audio) {
-    audio = document.createElement("audio");
-    audio.id = "lunaRainAudio";
-    audio.src = "./rain.mp3";
-    audio.loop = true;
-    audio.preload = "auto";
-  }
-
-  if (!existing) {
-    const win = document.createElement("section");
-    win.className = "app-window rain-window";
-    win.dataset.window = "rain";
-    win.style.zIndex = ++state.zIndex;
-    win.style.left = "5%";
-    win.style.top = "8%";
-    win.style.width = "min(420px, 90%)";
-    win.style.height = "auto";
-    win.innerHTML = `
-      <div class="window-title">
-        <span class="mini-glyph">☔</span><strong>Rain Sounds</strong>
-        <button data-minimize title="Minimize" aria-label="Minimize">−</button>
-        <button class="close" data-close title="Close" aria-label="Close">×</button>
-      </div>
-      <div class="window-content rain-content">
-        <p>Rain sounds are playing from <strong>rain.mp3</strong>.</p>
-        <div class="rain-audio-controls"></div>
-      </div>`;
-    $(".rain-audio-controls", win).appendChild(audio);
-    $("#windows").appendChild(win);
-    state.windows.set("rain", { element: win, title: "Rain Sounds" });
-    makeDraggable(win);
-    makeResizable(win);
-    win.addEventListener("pointerdown", () => focusWindow(win));
-  } else {
-    existing.element.style.display = "flex";
-    focusWindow(existing.element);
-    if (!audio.isConnected) $(".rain-audio-controls", existing.element).appendChild(audio);
-  }
-
-  audio.play().then(() => {
-    const status = $(".rain-content p", state.windows.get("rain").element);
-    if (status) status.textContent = "Rain sounds are playing from rain.mp3.";
-  }).catch(() => {
-    const status = $(".rain-content p", state.windows.get("rain").element);
-    if (status) status.textContent = "Press Play below to start the rain sounds.";
-  });
-  updateDock();
-}
 function openDelta() {
   enterLunaFullscreen();
   const existing = state.windows.get("delta");
@@ -228,10 +174,6 @@ function makeDraggable(win) {
 }
 
 document.addEventListener("click", event => {
-  if (event.target.closest("#rainSounds")) {
-    openRain();
-    return;
-  }
   if (event.target.closest("#openDelta, #deltaIcon, #home")) {
     openDelta();
     return;
@@ -321,3 +263,69 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 30000);
 localStorage.removeItem("hearth-app-links");
+
+
+// Always-on rain audio and animated rain overlay.
+function startRainAudio() {
+  const audio = $("#lunaRainAudio");
+  if (!audio) return;
+  audio.volume = 0.45;
+  const attempt = audio.play();
+  if (attempt && typeof attempt.catch === "function") attempt.catch(() => {
+    // Browsers block audible autoplay until the visitor interacts. Retry
+    // silently in the background after the first normal interaction.
+  });
+}
+function setupRainEffects() {
+  const canvas = $("#rainEffects");
+  const desktop = $(".desktop");
+  if (!canvas || !desktop) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  let width = 0, height = 0, drops = [];
+  const resize = () => {
+    const rect = desktop.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = rect.width;
+    height = rect.height;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const count = Math.min(150, Math.max(45, Math.floor(width / 8)));
+    drops = Array.from({length: count}, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      length: 8 + Math.random() * 17,
+      speed: 3 + Math.random() * 5,
+      drift: -1.1 - Math.random() * 1.2,
+      opacity: 0.12 + Math.random() * 0.24
+    }));
+  };
+  const draw = () => {
+    ctx.clearRect(0, 0, width, height);
+    ctx.lineWidth = 1;
+    for (const drop of drops) {
+      ctx.strokeStyle = "rgba(100, 130, 151, " + drop.opacity + ")";
+      ctx.beginPath();
+      ctx.moveTo(drop.x, drop.y);
+      ctx.lineTo(drop.x + drop.drift * 2, drop.y + drop.length);
+      ctx.stroke();
+      drop.x += drop.drift;
+      drop.y += drop.speed;
+      if (drop.y > height + drop.length || drop.x < -20) {
+        drop.x = Math.random() * (width + 30);
+        drop.y = -drop.length - Math.random() * height * 0.15;
+      }
+    }
+    requestAnimationFrame(draw);
+  };
+  resize();
+  window.addEventListener("resize", resize);
+  draw();
+}
+startRainAudio();
+setupRainEffects();
+document.addEventListener("pointerdown", startRainAudio, { once: true });
+document.addEventListener("keydown", startRainAudio, { once: true });
