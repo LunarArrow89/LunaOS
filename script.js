@@ -49,6 +49,159 @@ function openDelta() {
 }
 
 
+function open2048() {
+  const existing = state.windows.get("2048");
+  if (existing) {
+    existing.element.style.display = "flex";
+    focusWindow(existing.element);
+    updateDock();
+    return;
+  }
+
+  const win = document.createElement("section");
+  win.className = "app-window game2048-window";
+  win.dataset.window = "2048";
+  win.style.zIndex = ++state.zIndex;
+  win.innerHTML = `
+    <div class="window-title">
+      <span class="mini-glyph" aria-hidden="true">▦</span><strong>2048</strong>
+      <button data-maximize title="Maximize window" aria-label="Maximize window">□</button>
+      <button data-minimize title="Minimize" aria-label="Minimize">−</button>
+      <button class="close" data-close title="Close" aria-label="Close">×</button>
+    </div>
+    <div class="window-content game2048-content">
+      <div class="game2048-top">
+        <div><p class="game2048-eyebrow">A LITTLE NUMBER PUZZLE</p><h2>2048</h2></div>
+        <div class="game2048-scores"><div><small>SCORE</small><strong data-score>0</strong></div><div><small>BEST</small><strong data-best>0</strong></div></div>
+      </div>
+      <div class="game2048-actions"><span>Join the tiles to reach 2048.</span><button type="button" data-new-game>New game</button></div>
+      <div class="game2048-board" role="grid" aria-label="2048 game board"></div>
+      <p class="game2048-help">Use your arrow keys or swipe the board to move the tiles.</p>
+      <p class="game2048-message" aria-live="polite"></p>
+    </div>`;
+  $("#windows").appendChild(win);
+  state.windows.set("2048", { element: win, title: "2048", glyph: "▦" });
+  makeDraggable(win);
+  makeResizable(win);
+  win.addEventListener("pointerdown", () => focusWindow(win));
+  setup2048(win);
+  updateDock();
+}
+
+function setup2048(win) {
+  const boardElement = $(".game2048-board", win);
+  const scoreElement = $("[data-score]", win);
+  const bestElement = $("[data-best]", win);
+  const messageElement = $(".game2048-message", win);
+  let board = Array(16).fill(0);
+  let score = 0;
+  let best = 0;
+  try { best = Number(localStorage.getItem("lunaos-2048-best") || 0); } catch (error) {}
+  bestElement.textContent = best;
+  const values = [0, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048];
+
+  function render() {
+    boardElement.innerHTML = "";
+    board.forEach((value, index) => {
+      const tile = document.createElement("div");
+      tile.className = "game2048-tile" + (value ? " tile-" + value : " tile-empty");
+      tile.setAttribute("role", "gridcell");
+      tile.setAttribute("aria-label", value ? String(value) : "Empty");
+      tile.textContent = value || "";
+      boardElement.appendChild(tile);
+    });
+    scoreElement.textContent = score;
+    bestElement.textContent = best;
+  }
+
+  function addTile() {
+    const empty = board.map((value, index) => value === 0 ? index : -1).filter(index => index >= 0);
+    if (!empty.length) return;
+    board[empty[Math.floor(Math.random() * empty.length)]] = Math.random() < 0.9 ? 2 : 4;
+  }
+
+  function reset() {
+    board = Array(16).fill(0);
+    score = 0;
+    messageElement.textContent = "";
+    addTile();
+    addTile();
+    render();
+  }
+
+  function move(direction) {
+    if (messageElement.textContent.startsWith("Game over")) return;
+    const before = board.join(",");
+    let gained = 0;
+    for (let line = 0; line < 4; line++) {
+      const indexes = [];
+      for (let offset = 0; offset < 4; offset++) {
+        const row = direction === "left" || direction === "right" ? line : offset;
+        const col = direction === "left" || direction === "right" ? offset : line;
+        indexes.push(row * 4 + col);
+      }
+      if (direction === "right" || direction === "down") indexes.reverse();
+      const packed = indexes.map(index => board[index]).filter(value => value);
+      const merged = [];
+      for (let i = 0; i < packed.length; i++) {
+        if (packed[i] === packed[i + 1]) {
+          const doubled = packed[i] * 2;
+          merged.push(doubled);
+          gained += doubled;
+          i++;
+        } else merged.push(packed[i]);
+      }
+      while (merged.length < 4) merged.push(0);
+      indexes.forEach((index, i) => board[index] = merged[i]);
+    }
+    if (board.join(",") === before) return;
+    score += gained;
+    if (score > best) {
+      best = score;
+      try { localStorage.setItem("lunaos-2048-best", String(best)); } catch (error) {}
+    }
+    addTile();
+    messageElement.textContent = board.includes(2048) ? "You made 2048! Keep going or start a new game." : "";
+    if (!board.includes(0) && !canMove()) messageElement.textContent = "Game over — press New game to try again.";
+    render();
+  }
+
+  function canMove() {
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) {
+      const i = r * 4 + c;
+      if (board[i] === 0) return true;
+      if (c < 3 && board[i] === board[i + 1]) return true;
+      if (r < 3 && board[i] === board[i + 4]) return true;
+    }
+    return false;
+  }
+
+  win.addEventListener("keydown", event => {
+    const directions = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" };
+    if (directions[event.key] && state.windows.get("2048")?.element === win && win.style.display !== "none") {
+      event.preventDefault();
+      move(directions[event.key]);
+    }
+  });
+  $("[data-new-game]", win).addEventListener("click", reset);
+  let touchStart = null;
+  boardElement.addEventListener("touchstart", event => {
+    const touch = event.changedTouches[0];
+    touchStart = { x: touch.clientX, y: touch.clientY };
+  }, { passive: true });
+  boardElement.addEventListener("touchend", event => {
+    if (!touchStart) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - touchStart.x;
+    const dy = touch.clientY - touchStart.y;
+    touchStart = null;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
+    move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up"));
+  }, { passive: true });
+  reset();
+}
+
+
 function openPodcast() {
   enterLunaFullscreen();
   const existing = state.windows.get("podcast");
@@ -374,6 +527,10 @@ function makeDraggable(win) {
 }
 
 document.addEventListener("click", event => {
+  if (event.target.closest("#2048Icon")) {
+    open2048();
+    return;
+  }
   if (event.target.closest("#podcastIcon")) {
     openPodcast();
     return;
@@ -584,9 +741,10 @@ function restoreOpenWindows() {
     saved = [];
   }
   saved.forEach(item => {
-    if (!item || !["delta", "podcast"].includes(item.app)) return;
+    if (!item || !["delta", "podcast", "2048"].includes(item.app)) return;
     if (item.app === "delta") openDelta();
     if (item.app === "podcast") openPodcast();
+    if (item.app === "2048") open2048();
     const record = state.windows.get(item.app);
     if (!record) return;
     const win = record.element;
