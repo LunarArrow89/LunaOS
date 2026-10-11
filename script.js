@@ -1,6 +1,7 @@
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const DELTA_URL = "https://lunararrow89.github.io/Delta-/";
+const RAIN_URL = "https://www.rainymood.com/";
 const state = { windows: new Map(), zIndex: 10 };
 
 function openDelta() {
@@ -98,6 +99,10 @@ function makeDraggable(win) {
 }
 
 document.addEventListener("click", event => {
+  if (event.target.closest("#rainSounds")) {
+    window.open(RAIN_URL, "_blank", "noopener");
+    return;
+  }
   if (event.target.closest("#openDelta, #deltaIcon, #home")) {
     openDelta();
     return;
