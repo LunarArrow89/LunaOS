@@ -4,7 +4,16 @@ const DELTA_URL = "https://lunararrow89.github.io/Delta-/";
 const RAIN_URL = "https://www.rainymood.com/";
 const state = { windows: new Map(), zIndex: 10 };
 
+function enterLunaFullscreen() {
+  // Fullscreen the LunaOS page itself so Chrome's browser bars hide,
+  // while LunaOS's own taskbar remains visible.
+  if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  }
+}
+
 function openDelta() {
+  enterLunaFullscreen();
   const existing = state.windows.get("delta");
   if (existing) {
     existing.element.style.display = "flex";
@@ -117,25 +126,14 @@ document.addEventListener("click", event => {
   const maximize = event.target.closest("[data-maximize]");
   if (maximize) {
     const win = maximize.closest(".app-window");
-
-    // Use the browser's real fullscreen mode, not just a larger desktop window.
-    if (document.fullscreenElement === win) {
+    // Fullscreen LunaOS, not the Delta window, so the LunaOS taskbar stays visible.
+    if (document.fullscreenElement === document.documentElement) {
       document.exitFullscreen().catch(() => {});
-    } else if (win.requestFullscreen) {
-      win.requestFullscreen().then(() => {
-        win.classList.add("is-maximized");
-        maximize.textContent = "❐";
-        maximize.title = "Exit full screen";
-        maximize.setAttribute("aria-label", "Exit full screen");
-      }).catch(() => {
-        // Keep a working in-LunaOS maximize option if fullscreen is blocked.
-        win.classList.toggle("is-maximized");
-        updateMaximizeButton(win);
-      });
     } else {
-      win.classList.toggle("is-maximized");
-      updateMaximizeButton(win);
+      enterLunaFullscreen();
     }
+    win.classList.add("is-maximized");
+    updateMaximizeButton(win);
     return;
   }
   const minimize = event.target.closest("[data-minimize]");
@@ -150,27 +148,20 @@ function updateMaximizeButton(win) {
   if (!button) return;
   const maximized = win.classList.contains("is-maximized");
   button.textContent = maximized ? "❐" : "□";
-  button.title = maximized ? "Restore window" : "Full screen";
+  button.title = document.fullscreenElement === document.documentElement ? "Exit full screen" : "Hide Chrome bars (fullscreen)";
   button.setAttribute("aria-label", button.title);
 }
 
 document.addEventListener("fullscreenchange", () => {
-  const win = document.fullscreenElement;
-  if (win && win.classList.contains("app-window")) {
-    win.classList.add("is-maximized");
-    updateMaximizeButton(win);
-    return;
-  }
-  $(".app-window").forEach(item => {
-    if (item.classList.contains("is-maximized")) {
-      item.classList.remove("is-maximized");
-      item.style.left = "";
-      item.style.top = "";
-      item.style.width = "";
-      item.style.height = "";
-      updateMaximizeButton(item);
+  const pageFullscreen = document.fullscreenElement === document.documentElement;
+  $$(".app-window").forEach(win => {
+    if (win.dataset.window === "delta") {
+      // Delta stays fitted to the desktop area; only the page goes fullscreen.
+      win.classList.add("is-maximized");
+      updateMaximizeButton(win);
     }
   });
+  document.body.classList.toggle("luna-fullscreen", pageFullscreen);
 });
 
 function updateClock() {
