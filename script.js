@@ -2,6 +2,8 @@ const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const DELTA_URL = "./delta.html";
 const RAIN_URL = "https://www.rainymood.com/";
+const PODCAST_DB_NAME = "lunaos-podcast-library";
+const PODCAST_STORE = "episodes";
 const state = { windows: new Map(), zIndex: 10 };
 
 function enterLunaFullscreen() {
@@ -43,6 +45,180 @@ function openDelta() {
   makeResizable(win);
   win.addEventListener("pointerdown", () => focusWindow(win));
   updateDock();
+}
+
+
+function openPodcast() {
+  enterLunaFullscreen();
+  const existing = state.windows.get("podcast");
+  if (existing) {
+    existing.element.style.display = "flex";
+    focusWindow(existing.element);
+    updateDock();
+    return;
+  }
+  const win = document.createElement("section");
+  win.className = "app-window podcast-window";
+  win.dataset.window = "podcast";
+  win.style.zIndex = ++state.zIndex;
+  win.innerHTML = `
+    <div class="window-title">
+      <span class="mini-glyph" aria-hidden="true">〽</span><strong>Podcast Episodes</strong>
+      <button data-maximize title="Restore window" aria-label="Restore window">❐</button>
+      <button data-minimize title="Minimize" aria-label="Minimize">−</button>
+      <button class="close" data-close title="Close" aria-label="Close">×</button>
+    </div>
+    <div class="window-content podcast-content">
+      <div class="podcast-hero">
+        <div class="podcast-art" aria-hidden="true"><span>▂▅▇▃▆▂▅</span></div>
+        <div><p class="podcast-kicker">YOUR AUDIO LIBRARY</p><h2>Podcast Episodes</h2><p>Add audio files from your device and listen right here.</p></div>
+      </div>
+      <label class="podcast-upload" for="podcastFiles">＋ Add episode audio files</label>
+      <input id="podcastFiles" class="podcast-file-input" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac,.flac" multiple>
+      <p class="podcast-status" id="podcastStatus" role="status">Your episodes are saved in this browser.</p>
+      <div id="podcastEpisodeList" class="podcast-episode-list"><p class="muted">Loading episodes…</p></div>
+      <p class="podcast-footnote">Audio files stay on this device in this browser. Supported files depend on your browser.</p>
+    </div>`;
+  $("#windows").appendChild(win);
+  state.windows.set("podcast", { element: win, title: "Podcast Episodes", glyph: "〽" });
+  makeDraggable(win);
+  makeResizable(win);
+  win.addEventListener("pointerdown", () => focusWindow(win));
+  setupPodcastLibrary(win);
+  updateDock();
+}
+
+function openPodcastDatabase() {
+  return new Promise((resolve, reject) => {
+    if (!("indexedDB" in window)) return reject(new Error("This browser does not support local episode storage."));
+    const request = indexedDB.open(PODCAST_DB_NAME, 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(PODCAST_STORE)) db.createObjectStore(PODCAST_STORE, { keyPath: "id" });
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error("Could not open episode storage."));
+  });
+}
+
+async function setupPodcastLibrary(win) {
+  const status = $("#podcastStatus", win);
+  const list = $("#podcastEpisodeList", win);
+  const picker = $("#podcastFiles", win);
+  let db;
+  let activeAudioUrl = null;
+  const setStatus = message => { status.textContent = message; };
+  const loadEpisodes = () => new Promise((resolve, reject) => {
+    const request = db.transaction(PODCAST_STORE, "readonly").objectStore(PODCAST_STORE).getAll();
+    request.onsuccess = () => resolve(request.result.sort((a, b) => a.addedAt - b.addedAt));
+    request.onerror = () => reject(request.error);
+  });
+  const saveEpisode = episode => new Promise((resolve, reject) => {
+    const request = db.transaction(PODCAST_STORE, "readwrite").objectStore(PODCAST_STORE).put(episode);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+  const deleteEpisode = id => new Promise((resolve, reject) => {
+    const request = db.transaction(PODCAST_STORE, "readwrite").objectStore(PODCAST_STORE).delete(id);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+  const formatTime = seconds => {
+    if (!Number.isFinite(seconds) || seconds < 0) return "Audio episode";
+    return Math.floor(seconds / 60) + ":" + String(Math.floor(seconds % 60)).padStart(2, "0");
+  };
+  const render = async () => {
+    const episodes = await loadEpisodes();
+    list.innerHTML = "";
+    if (!episodes.length) {
+      const empty = document.createElement("div");
+      empty.className = "podcast-empty";
+      empty.innerHTML = '<span aria-hidden="true">♫</span><strong>No episodes yet</strong><p>Choose one or more audio files above to build your library.</p>';
+      list.appendChild(empty);
+      return;
+    }
+    episodes.forEach(episode => {
+      const row = document.createElement("article");
+      row.className = "podcast-episode";
+      const details = document.createElement("div");
+      details.className = "podcast-episode-details";
+      const title = document.createElement("strong");
+      title.textContent = episode.title;
+      const meta = document.createElement("small");
+      meta.textContent = (episode.type || "Audio file") + " · " + formatBytes(episode.size);
+      details.append(title, meta);
+      const controls = document.createElement("div");
+      controls.className = "podcast-episode-actions";
+      const play = document.createElement("button");
+      play.type = "button";
+      play.className = "podcast-play";
+      play.textContent = "▶ Play";
+      play.addEventListener("click", () => {
+        if (activeAudioUrl) URL.revokeObjectURL(activeAudioUrl);
+        activeAudioUrl = URL.createObjectURL(episode.file);
+        const audio = $("#podcastNowPlaying", win);
+        audio.src = activeAudioUrl;
+        audio.play().then(() => setStatus("Playing: " + episode.title)).catch(() => setStatus("Couldn't play this file. Try an MP3 or WAV file."));
+        audio.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "podcast-remove";
+      remove.textContent = "Remove";
+      remove.addEventListener("click", async () => {
+        try {
+          await deleteEpisode(episode.id);
+          setStatus("Removed: " + episode.title);
+          await render();
+        } catch (error) { setStatus("Couldn't remove this episode."); }
+      });
+      controls.append(play, remove);
+      row.append(details, controls);
+      list.appendChild(row);
+    });
+  };
+  try {
+    db = await openPodcastDatabase();
+    const player = document.createElement("audio");
+    player.id = "podcastNowPlaying";
+    player.controls = true;
+    player.preload = "metadata";
+    player.className = "podcast-player";
+    player.setAttribute("aria-label", "Podcast episode player");
+    list.before(player);
+    picker.addEventListener("change", async () => {
+      const files = [...picker.files].filter(file => file.type.startsWith("audio/") || /\.(mp3|m4a|wav|ogg|aac|flac|opus)$/i.test(file.name));
+      if (!files.length) { setStatus("Choose audio files such as MP3, M4A, WAV, or OGG."); return; }
+      try {
+        for (const file of files) {
+          await saveEpisode({
+            id: (crypto.randomUUID ? crypto.randomUUID() : file.name + "-" + file.lastModified + "-" + file.size),
+            title: file.name.replace(/\.[^.]+$/, ""),
+            type: file.type || "Audio file",
+            size: file.size,
+            addedAt: Date.now(),
+            file
+          });
+        }
+        setStatus("Added " + files.length + (files.length === 1 ? " episode." : " episodes."));
+        picker.value = "";
+        await render();
+      } catch (error) {
+        setStatus("Couldn't save the files. They may be too large or browser storage may be full.");
+      }
+    });
+    await render();
+  } catch (error) {
+    setStatus(error.message || "Episode storage is unavailable in this browser.");
+    list.innerHTML = '<p class="muted">Could not load your local episode library. Try a browser that supports IndexedDB.</p>';
+  }
+  win.addEventListener("remove", () => { if (activeAudioUrl) URL.revokeObjectURL(activeAudioUrl); });
+}
+
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes)) return "";
+  if (bytes < 1024 * 1024) return Math.max(1, Math.round(bytes / 1024)) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
 
 function makeResizable(win) {
@@ -127,8 +303,8 @@ function updateDock() {
   holder.innerHTML = "";
   for (const [app, record] of state.windows) {
     const button = document.createElement("button");
-    button.textContent = "◇ " + record.title;
-    button.title = "Show or minimize Delta-";
+    button.textContent = (record.glyph || "◇") + " " + record.title;
+    button.title = "Show or minimize " + record.title;
     const isVisible = record.element.style.display !== "none";
     button.className = isVisible ? "selected" : "minimized";
     button.setAttribute("aria-label", isVisible ? record.title + " window is open" : record.title + " window is minimized");
@@ -174,6 +350,10 @@ function makeDraggable(win) {
 }
 
 document.addEventListener("click", event => {
+  if (event.target.closest("#podcastIcon")) {
+    openPodcast();
+    return;
+  }
   if (event.target.closest("#openDelta, #deltaIcon, #home")) {
     openDelta();
     return;
@@ -232,7 +412,17 @@ document.addEventListener("fullscreenchange", () => {
   const pageFullscreen = document.fullscreenElement === document.documentElement;
   document.body.classList.toggle("luna-fullscreen", pageFullscreen);
   $$(".app-window").forEach(win => {
-    if (win.dataset.window !== "delta") return;
+    if (win.dataset.window !== "delta") {
+      if (win.dataset.window === "podcast" && pageFullscreen) {
+        win.classList.add("is-maximized");
+        win.style.left = ""; win.style.top = ""; win.style.width = ""; win.style.height = "";
+      } else if (win.dataset.window === "podcast" && !pageFullscreen && win.classList.contains("is-maximized")) {
+        win.classList.remove("is-maximized");
+        win.style.left = "8%"; win.style.top = "8%"; win.style.width = "min(760px, 84%)"; win.style.height = "min(620px, 82%)";
+      }
+      if (win.dataset.window === "podcast") updateMaximizeButton(win);
+      return;
+    }
     if (pageFullscreen) {
       win.classList.add("is-maximized");
       win.style.left = "";
