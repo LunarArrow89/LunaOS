@@ -317,3 +317,19 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   border: 0;
   background: #17191f;
 }
+
+
+/* Local rain.mp3 player controls. */
+.rain-content {
+  display: block;
+  padding: 16px !important;
+}
+.rain-content p {
+  margin: 0 0 12px;
+  color: #52694a;
+  font-size: 13px;
+}
+.rain-audio-controls audio {
+  display: block;
+  width: 100%;
+}
