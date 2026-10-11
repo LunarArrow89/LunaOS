@@ -113,3 +113,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   #openApps button { max-width: 95px; padding: 8px; font-size: 10px; }
   .taskbar-clock { min-width: 48px; font-size: 11px; }
 }
+
+.delta-content { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 8px; }
+.delta-heading { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+.delta-symbol { width: 56px; height: 56px; display: grid; place-items: center; border-radius: 16px; background: #d5e2cd; color: #52694a; font-size: 34px; }
+.delta-heading h2 { margin: 0; }
+.delta-heading p { margin: 4px 0 0; }
