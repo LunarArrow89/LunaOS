@@ -229,26 +229,128 @@ async function setupPodcastLibrary(win) {
   win.addEventListener("remove", () => { if (activeAudioUrl) URL.revokeObjectURL(activeAudioUrl); });
 }
 
-function setupArmchairAnonymous(win, player, setStatus) {
-  const frame = $("#armchairEpisodeList", win);
+async function setupArmchairAnonymous(win, player, setStatus) {
+  const list = $("#armchairEpisodeList", win);
   const status = $("#armchairStatus", win);
   const refresh = $("#armchairRefresh", win);
-  if (!frame || !status || !refresh) return;
-  const officialEpisodesUrl = "https://armchairexpertpod.com/pods";
-  frame.src = officialEpisodesUrl;
-  frame.addEventListener("load", () => {
-    status.textContent = "Official Armchair Expert website loaded. Browse the episode list above.";
-    setStatus("Armchair Expert episodes are shown from the official website.");
-  });
-  frame.addEventListener("error", () => {
-    status.textContent = "The official website could not be embedded. Use the Open Armchair Anonymous link below.";
-  });
-  refresh.addEventListener("click", () => {
-    status.textContent = "Refreshing the official Armchair Expert website…";
+  if (!list || !status || !refresh) return;
+
+  const feedUrl = "https://rss.art19.com/armchair-expert";
+  const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(feedUrl);
+  let loading = false;
+
+  const formatDuration = value => {
+    if (!value) return "";
+    if (/^\d+:\d{2}(:\d{2})?$/.test(value)) return value;
+    const seconds = Number(value);
+    if (!Number.isFinite(seconds) || seconds <= 0) return "";
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainder = Math.floor(seconds % 60);
+    return hours
+      ? hours + ":" + String(minutes).padStart(2, "0") + ":" + String(remainder).padStart(2, "0")
+      : minutes + ":" + String(remainder).padStart(2, "0");
+  };
+
+  const load = async () => {
+    if (loading) return;
+    loading = true;
     refresh.disabled = true;
-    frame.src = officialEpisodesUrl + "?luna_refresh=" + Date.now();
-    window.setTimeout(() => { refresh.disabled = false; }, 1200);
-  });
+    status.textContent = "Loading official episode audio links…";
+    list.innerHTML = '<p class="muted">Loading Armchair Anonymous episodes…</p>';
+    try {
+      const response = await fetch(proxyUrl, { cache: "no-store" });
+      if (!response.ok) throw new Error("Episode feed request failed (" + response.status + ").");
+      const xmlText = await response.text();
+      const xml = new DOMParser().parseFromString(xmlText, "application/xml");
+      if (xml.querySelector("parsererror")) throw new Error("The episode feed could not be read.");
+      const items = [...xml.querySelectorAll("channel > item")].map(item => {
+        const enclosure = item.querySelector("enclosure");
+        const title = item.querySelector("title")?.textContent?.trim() || "Untitled episode";
+        const description = item.querySelector("description")?.textContent?.trim() || "";
+        const date = item.querySelector("pubDate")?.textContent?.trim() || "";
+        const duration = item.getElementsByTagNameNS("*", "duration")[0]?.textContent?.trim() || "";
+        const link = item.querySelector("link")?.textContent?.trim() || "https://armchairexpertpod.com/pods";
+        return {
+          title,
+          description,
+          date,
+          duration,
+          audioUrl: enclosure?.getAttribute("url") || "",
+          link
+        };
+      }).filter(episode => /^armchair anonymous\s*:/i.test(episode.title) && /^https?:\/\//i.test(episode.audioUrl));
+
+      list.innerHTML = "";
+      if (!items.length) {
+        throw new Error("No Armchair Anonymous audio links were found in the official feed.");
+      }
+
+      items.forEach(episode => {
+        const row = document.createElement("article");
+        row.className = "armchair-episode";
+        const details = document.createElement("div");
+        details.className = "armchair-episode-details";
+        const title = document.createElement("strong");
+        title.className = "armchair-episode-title";
+        title.textContent = episode.title.replace(/^Armchair Anonymous\s*:\s*/i, "");
+        const meta = document.createElement("small");
+        const dateText = episode.date ? new Date(episode.date).toLocaleDateString([], { year: "numeric", month: "short", day: "numeric" }) : "";
+        const durationText = formatDuration(episode.duration);
+        meta.textContent = [dateText, durationText].filter(Boolean).join(" · ") || "Armchair Anonymous";
+        details.append(title, meta);
+
+        const controls = document.createElement("div");
+        controls.className = "armchair-episode-actions";
+        const play = document.createElement("button");
+        play.type = "button";
+        play.className = "podcast-play";
+        play.textContent = "▶ Play";
+        play.addEventListener("click", async () => {
+          player.src = episode.audioUrl;
+          player.load();
+          startRainAudio();
+          try {
+            await player.play();
+            startRainAudio();
+            setStatus("Playing: " + episode.title);
+            player.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          } catch (error) {
+            status.textContent = "This audio stream could not start. Try again or open the official episode page.";
+            setStatus("Couldn't play this episode.");
+          }
+        });
+        const page = document.createElement("a");
+        page.className = "armchair-episode-link";
+        page.href = episode.link;
+        page.target = "_blank";
+        page.rel = "noopener noreferrer";
+        page.textContent = "Details ↗";
+        controls.append(play, page);
+        row.append(details, controls);
+        list.appendChild(row);
+      });
+      status.textContent = "Loaded " + items.length + " Armchair Anonymous episodes. Audio streams from the official podcast feed.";
+    } catch (error) {
+      list.innerHTML = '<p class="muted">Could not load the audio list. The official site is still available below.</p>';
+      status.textContent = (error && error.message ? error.message + " " : "") + "Try Refresh, or open Armchair Anonymous on the official website.";
+      if (!list.querySelector(".armchair-open-site")) {
+        const link = document.createElement("a");
+        link.className = "armchair-episode-link armchair-open-site";
+        link.href = "https://armchairexpertpod.com/armchair-anonymous-show";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "Open Armchair Anonymous ↗";
+        list.appendChild(link);
+      }
+    } finally {
+      loading = false;
+      refresh.disabled = false;
+    }
+  };
+
+  refresh.addEventListener("click", load);
+  await load();
 }
 
 function formatBytes(bytes) {
