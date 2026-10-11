@@ -190,3 +190,35 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 @media (max-width: 650px) {
   .rain-button { padding: 8px 7px; font-size: 10px; }
 }
+
+
+/* Small running-app bars under taskbar tabs. */
+#openApps button {
+  position: relative;
+  border-radius: 10px 10px 5px 5px;
+  padding-bottom: 11px;
+}
+#openApps button::after {
+  content: "";
+  position: absolute;
+  left: 28%;
+  right: 28%;
+  bottom: 3px;
+  height: 3px;
+  border-radius: 3px;
+  background: #a8b99a;
+  opacity: .85;
+  transition: left .15s ease, right .15s ease, background .15s ease;
+}
+#openApps button.selected::after {
+  left: 18%;
+  right: 18%;
+  background: #718963;
+  opacity: 1;
+}
+#openApps button.minimized::after {
+  left: 38%;
+  right: 38%;
+  background: #c8bda9;
+  opacity: 1;
+}
