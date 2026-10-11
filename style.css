@@ -173,3 +173,20 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .app-window:has(.delta-frame) .window-title button[data-maximize] {
   font-size: 15px;
 }
+
+
+/* Rainy Mood background sound launcher */
+.rain-button {
+  flex: 0 0 auto;
+  padding: 8px 11px;
+  border: 1px solid #d2dcc9;
+  border-radius: 10px;
+  background: #e1e8d9;
+  color: #52694a;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.rain-button:hover { background: #d4e0cb; }
+@media (max-width: 650px) {
+  .rain-button { padding: 8px 7px; font-size: 10px; }
+}
