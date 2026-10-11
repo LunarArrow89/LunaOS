@@ -485,8 +485,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .game2048-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 13px 0 10px; font-size: 11px; }
 .game2048-actions button { padding: 9px 12px; border: 0; border-radius: 8px; background: #8c9d7b; color: white; font-size: 11px; font-weight: bold; white-space: nowrap; }
 .game2048-actions button:hover { background: #758866; }
-.game2048-board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: min(100%, 430px); aspect-ratio: 1; margin: 0 auto; padding: 8px; border-radius: 12px; background: #cbbda8; outline-offset: 3px; touch-action: none; user-select: none; }
-.game2048-tile { display: grid; place-items: center; min-width: 0; border-radius: 7px; background: #eee7dc; color: #665b4d; font-size: clamp(18px, 5vw, 31px); font-weight: 800; }
+.game2048-board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 8px; width: min(100%, 430px); aspect-ratio: 1; box-sizing: border-box; margin: 0 auto; padding: 8px; border-radius: 12px; background: #cbbda8; outline-offset: 3px; touch-action: none; user-select: none; }
+.game2048-tile { display: grid; place-items: center; min-width: 0; min-height: 0; aspect-ratio: 1; box-sizing: border-box; border-radius: 7px; background: #eee7dc; color: #665b4d; font-size: clamp(18px, 5vw, 31px); font-weight: 800; }
 .game2048-tile.tile-empty { background: rgba(246, 239, 228, .55); }
 .game2048-tile.tile-2 { background: #f4eee4; }
 .game2048-tile.tile-4 { background: #eee0c8; }
