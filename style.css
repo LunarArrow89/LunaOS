@@ -333,3 +333,15 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   display: block;
   width: 100%;
 }
+
+
+/* Rain effect layer: above the desktop background, but behind all windows. */
+#rainEffects {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+  opacity: .9;
+}
+#lunaRainAudio { display: none; }
