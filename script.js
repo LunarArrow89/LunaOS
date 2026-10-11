@@ -117,16 +117,24 @@ document.addEventListener("click", event => {
   const maximize = event.target.closest("[data-maximize]");
   if (maximize) {
     const win = maximize.closest(".app-window");
-    win.classList.toggle("is-maximized");
-    const maximized = win.classList.contains("is-maximized");
-    maximize.textContent = maximized ? "❐" : "□";
-    maximize.title = maximized ? "Restore window" : "Maximize window";
-    maximize.setAttribute("aria-label", maximize.title);
-    if (maximized) {
-      win.style.left = "";
-      win.style.top = "";
-      win.style.width = "";
-      win.style.height = "";
+
+    // Use the browser's real fullscreen mode, not just a larger desktop window.
+    if (document.fullscreenElement === win) {
+      document.exitFullscreen().catch(() => {});
+    } else if (win.requestFullscreen) {
+      win.requestFullscreen().then(() => {
+        win.classList.add("is-maximized");
+        maximize.textContent = "❐";
+        maximize.title = "Exit full screen";
+        maximize.setAttribute("aria-label", "Exit full screen");
+      }).catch(() => {
+        // Keep a working in-LunaOS maximize option if fullscreen is blocked.
+        win.classList.toggle("is-maximized");
+        updateMaximizeButton(win);
+      });
+    } else {
+      win.classList.toggle("is-maximized");
+      updateMaximizeButton(win);
     }
     return;
   }
@@ -135,6 +143,34 @@ document.addEventListener("click", event => {
     minimize.closest(".app-window").style.display = "none";
     updateDock();
   }
+});
+
+function updateMaximizeButton(win) {
+  const button = $("[data-maximize]", win);
+  if (!button) return;
+  const maximized = win.classList.contains("is-maximized");
+  button.textContent = maximized ? "❐" : "□";
+  button.title = maximized ? "Restore window" : "Full screen";
+  button.setAttribute("aria-label", button.title);
+}
+
+document.addEventListener("fullscreenchange", () => {
+  const win = document.fullscreenElement;
+  if (win && win.classList.contains("app-window")) {
+    win.classList.add("is-maximized");
+    updateMaximizeButton(win);
+    return;
+  }
+  $(".app-window").forEach(item => {
+    if (item.classList.contains("is-maximized")) {
+      item.classList.remove("is-maximized");
+      item.style.left = "";
+      item.style.top = "";
+      item.style.width = "";
+      item.style.height = "";
+      updateMaximizeButton(item);
+    }
+  });
 });
 
 function updateClock() {
