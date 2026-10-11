@@ -507,6 +507,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 
 /* Keep the 2048 badge its normal size; only shrink the lettering. */
 .icons .game2048-icon {
-  font-size: 8px;
-  letter-spacing: -0.5px;
+  font-size: 12px;
+  letter-spacing: 0;
 }
