@@ -95,6 +95,7 @@ function setup2048(win) {
   const bestElement = $("[data-best]", win);
   const messageElement = $(".game2048-message", win);
   let board = Array(16).fill(0);
+  let previousBoard = null;
   let score = 0;
   let best = 0;
   try { best = Number(localStorage.getItem("lunaos-2048-best") || 0); } catch (error) {}
@@ -102,6 +103,8 @@ function setup2048(win) {
   const values = [0, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048];
 
   function render() {
+    const oldBoard = previousBoard;
+    const usedOld = new Set();
     boardElement.innerHTML = "";
     board.forEach((value, index) => {
       const tile = document.createElement("div");
@@ -110,7 +113,38 @@ function setup2048(win) {
       tile.setAttribute("aria-label", value ? String(value) : "Empty");
       tile.textContent = value || "";
       boardElement.appendChild(tile);
+
+      if (oldBoard && value) {
+        // Start each moved tile at its previous cell, then glide into place.
+        const sourceValues = value >= 4 ? [value, value / 2] : [value];
+        let sourceIndex = -1;
+        let sourceDistance = Infinity;
+        oldBoard.forEach((oldValue, oldIndex) => {
+          if (usedOld.has(oldIndex) || !sourceValues.includes(oldValue)) return;
+          const distance = Math.abs(Math.floor(oldIndex / 4) - Math.floor(index / 4)) +
+            Math.abs((oldIndex % 4) - (index % 4));
+          if (distance < sourceDistance) {
+            sourceDistance = distance;
+            sourceIndex = oldIndex;
+          }
+        });
+        if (sourceIndex >= 0 && sourceIndex !== index) {
+          usedOld.add(sourceIndex);
+          const dx = ((sourceIndex % 4) - (index % 4)) * (tile.getBoundingClientRect().width + 8);
+          const dy = (Math.floor(sourceIndex / 4) - Math.floor(index / 4)) * (tile.getBoundingClientRect().height + 8);
+          tile.style.transition = "none";
+          tile.style.transform = "translate(" + dx + "px, " + dy + "px)";
+          tile.style.zIndex = "2";
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            tile.style.transition = "transform 130ms ease-out";
+            tile.style.transform = "translate(0, 0)";
+          }));
+        } else if (sourceIndex < 0) {
+          tile.animate([{ transform: "scale(.72)", opacity: .6 }, { transform: "scale(1)", opacity: 1 }], { duration: 130, easing: "ease-out" });
+        }
+      }
     });
+    previousBoard = board.slice();
     scoreElement.textContent = score;
     bestElement.textContent = best;
   }
@@ -177,12 +211,15 @@ function setup2048(win) {
     return false;
   }
 
-  win.addEventListener("keydown", event => {
+  // Listen on the document so arrow keys work even if the board itself is not focused.
+  document.addEventListener("keydown", event => {
     const directions = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" };
-    if (directions[event.key] && state.windows.get("2048")?.element === win && win.style.display !== "none") {
-      event.preventDefault();
-      move(directions[event.key]);
-    }
+    const active = state.windows.get("2048")?.element;
+    const focused = document.activeElement;
+    if (!directions[event.key] || active !== win || win.style.display === "none") return;
+    if (focused && /^(INPUT|TEXTAREA|SELECT)$/.test(focused.tagName)) return;
+    event.preventDefault();
+    move(directions[event.key]);
   });
   $("[data-new-game]", win).addEventListener("click", reset);
   let touchStart = null;
