@@ -187,6 +187,10 @@ async function setupPodcastLibrary(win) {
     player.className = "podcast-player";
     player.setAttribute("aria-label", "Podcast episode player");
     list.before(player);
+    const syncRainVolume = () => startRainAudio();
+    player.addEventListener("play", syncRainVolume);
+    player.addEventListener("pause", syncRainVolume);
+    player.addEventListener("ended", syncRainVolume);
     picker.addEventListener("change", async () => {
       const files = [...picker.files].filter(file => file.type.startsWith("audio/") || /\.(mp3|m4a|wav|ogg|aac|flac|opus)$/i.test(file.name));
       if (!files.length) { setStatus("Choose audio files such as MP3, M4A, WAV, or OGG."); return; }
@@ -368,10 +372,29 @@ document.addEventListener("click", event => {
   const maximize = event.target.closest("[data-maximize]");
   if (maximize) {
     const win = maximize.closest(".app-window");
-    const isFullscreen = document.fullscreenElement === document.documentElement;
 
+    // Podcast has its own maximize/restore toggle so it can fill LunaOS
+    // without changing the fullscreen state of the whole desktop.
+    if (win.dataset.window === "podcast") {
+      if (win.classList.contains("is-maximized")) {
+        win.classList.remove("is-maximized");
+        win.style.left = "8%";
+        win.style.top = "8%";
+        win.style.width = "min(760px, 84%)";
+        win.style.height = "min(620px, 82%)";
+      } else {
+        win.classList.add("is-maximized");
+        win.style.left = "0";
+        win.style.top = "0";
+        win.style.width = "100%";
+        win.style.height = "100%";
+      }
+      updateMaximizeButton(win);
+      return;
+    }
+
+    const isFullscreen = document.fullscreenElement === document.documentElement;
     if (isFullscreen) {
-      // Restore Delta- to a movable, resizable window within LunaOS.
       document.exitFullscreen().catch(() => {});
       win.classList.remove("is-maximized");
       win.style.left = "5%";
@@ -379,7 +402,6 @@ document.addEventListener("click", event => {
       win.style.width = "min(900px, 90%)";
       win.style.height = "min(650px, 85%)";
     } else {
-      // Re-enter fullscreen for LunaOS itself, keeping its taskbar on screen.
       win.classList.add("is-maximized");
       if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen().catch(() => {
@@ -415,13 +437,7 @@ document.addEventListener("fullscreenchange", () => {
   document.body.classList.toggle("luna-fullscreen", pageFullscreen);
   $$(".app-window").forEach(win => {
     if (win.dataset.window !== "delta") {
-      if (win.dataset.window === "podcast" && pageFullscreen) {
-        win.classList.add("is-maximized");
-        win.style.left = ""; win.style.top = ""; win.style.width = ""; win.style.height = "";
-      } else if (win.dataset.window === "podcast" && !pageFullscreen && win.classList.contains("is-maximized")) {
-        win.classList.remove("is-maximized");
-        win.style.left = "8%"; win.style.top = "8%"; win.style.width = "min(760px, 84%)"; win.style.height = "min(620px, 82%)";
-      }
+      // Podcast maximization is independent of browser fullscreen mode.
       if (win.dataset.window === "podcast") updateMaximizeButton(win);
       return;
     }
@@ -463,7 +479,9 @@ function startRainAudio() {
   if (!audio) return;
   audio.loop = true;
   audio.muted = false;
-  audio.volume = 0.45;
+  // Lift the rain slightly while an uploaded podcast is playing so both are audible.
+  const podcastPlayer = $("#podcastNowPlaying");
+  audio.volume = podcastPlayer && !podcastPlayer.paused && !podcastPlayer.ended ? 0.58 : 0.45;
   // Rain is a separate audio stream from podcasts and other app sounds.
   // Never pause it just because another audio player starts.
   if (audio.paused) {
