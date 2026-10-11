@@ -75,7 +75,7 @@ function open2048() {
         <div class="game2048-scores"><div><small>SCORE</small><strong data-score>0</strong></div><div><small>BEST</small><strong data-best>0</strong></div></div>
       </div>
       <div class="game2048-actions"><span>Join the tiles to reach 2048.</span><button type="button" data-new-game>New game</button></div>
-      <div class="game2048-board" role="grid" aria-label="2048 game board"></div>
+      <div class="game2048-board" tabindex="0" role="grid" aria-label="2048 game board"></div>
       <p class="game2048-help">Use your arrow keys or swipe the board to move the tiles.</p>
       <p class="game2048-message" aria-live="polite"></p>
     </div>`;
