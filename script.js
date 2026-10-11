@@ -4,6 +4,7 @@ const DELTA_URL = "./delta.html";
 const RAIN_URL = "https://www.rainymood.com/";
 const PODCAST_DB_NAME = "lunaos-podcast-library";
 const PODCAST_STORE = "episodes";
+const ARMCHAIR_FEED_URL = "https://rss.art19.com/armchair-expert";
 const state = { windows: new Map(), zIndex: 10 };
 
 function enterLunaFullscreen() {
@@ -71,8 +72,14 @@ function openPodcast() {
     <div class="window-content podcast-content">
       <div class="podcast-hero">
         <div class="podcast-art" aria-hidden="true"><span>▂▅▇▃▆▂▅</span></div>
-        <div><p class="podcast-kicker">YOUR AUDIO LIBRARY</p><h2>Podcast Episodes</h2><p>Add audio files from your device and listen right here.</p></div>
+        <div><p class="podcast-kicker">YOUR AUDIO LIBRARY</p><h2>Podcast Episodes</h2><p>Listen to Armchair Anonymous or add your own audio files.</p></div>
       </div>
+      <section class="armchair-section" aria-labelledby="armchairHeading">
+        <div class="armchair-heading"><div><p class="podcast-kicker">FROM THE OFFICIAL PODCAST FEED</p><h3 id="armchairHeading">Armchair Anonymous</h3></div><button type="button" class="armchair-refresh" id="armchairRefresh">↻ Refresh</button></div>
+        <p class="armchair-description">Browse episodes here and play them in LunaOS. Audio streams from the publisher; it is not copied into your device library.</p>
+        <p class="podcast-status" id="armchairStatus" role="status">Loading Armchair Anonymous episodes…</p>
+        <div id="armchairEpisodeList" class="armchair-episode-list"><p class="muted">Loading episodes…</p></div>
+      </section>
       <label class="podcast-upload" for="podcastFiles">＋ Add episode audio files</label>
       <input id="podcastFiles" class="podcast-file-input" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac,.flac" multiple>
       <p class="podcast-status" id="podcastStatus" role="status">Your episodes are saved in this browser.</p>
@@ -191,6 +198,7 @@ async function setupPodcastLibrary(win) {
     player.className = "podcast-player";
     player.setAttribute("aria-label", "Podcast episode player");
     list.before(player);
+    setupArmchairAnonymous(win, player, setStatus);
     picker.addEventListener("change", async () => {
       const files = [...picker.files].filter(file => file.type.startsWith("audio/") || /\.(mp3|m4a|wav|ogg|aac|flac|opus)$/i.test(file.name));
       if (!files.length) { setStatus("Choose audio files such as MP3, M4A, WAV, or OGG."); return; }
@@ -218,6 +226,55 @@ async function setupPodcastLibrary(win) {
     list.innerHTML = '<p class="muted">Could not load your local episode library. Try a browser that supports IndexedDB.</p>';
   }
   win.addEventListener("remove", () => { if (activeAudioUrl) URL.revokeObjectURL(activeAudioUrl); });
+}
+
+async function setupArmchairAnonymous(win, player, setStatus) {
+  const list = $("#armchairEpisodeList", win);
+  const status = $("#armchairStatus", win);
+  const refresh = $("#armchairRefresh", win);
+  if (!list || !status || !refresh) return;
+  const load = async () => {
+    status.textContent = "Loading Armchair Anonymous episodes…";
+    list.innerHTML = '<p class="muted">Fetching the public podcast feed…</p>';
+    refresh.disabled = true;
+    try {
+      const endpoint = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(ARMCHAIR_FEED_URL);
+      const response = await fetch(endpoint, { cache: "no-store" });
+      if (!response.ok) throw new Error("Feed service returned HTTP " + response.status);
+      const data = await response.json();
+      if (data.status !== "ok" || !Array.isArray(data.items)) throw new Error(data.message || "The podcast feed could not be read.");
+      const episodes = data.items.filter(item => /^armchair anonymous\s*:/i.test((item.title || "").trim()));
+      list.innerHTML = "";
+      if (!episodes.length) { list.innerHTML = '<p class="muted">No Armchair Anonymous episodes were found in the feed right now.</p>'; status.textContent = "Feed loaded, but no matching episodes were found."; return; }
+      episodes.forEach(episode => {
+        const enclosure = episode.enclosure && episode.enclosure.link;
+        const row = document.createElement("article"); row.className = "podcast-episode armchair-episode";
+        const details = document.createElement("div"); details.className = "podcast-episode-details";
+        const title = document.createElement("strong"); title.textContent = episode.title || "Armchair Anonymous";
+        const meta = document.createElement("small");
+        const date = episode.pubDate ? new Date(episode.pubDate).toLocaleDateString() : "Armchair Anonymous";
+        const duration = episode.itunes && episode.itunes.duration ? " · " + episode.itunes.duration : "";
+        meta.textContent = date + duration; details.append(title, meta);
+        const actions = document.createElement("div"); actions.className = "podcast-episode-actions";
+        const play = document.createElement("button"); play.type = "button"; play.className = "podcast-play"; play.textContent = "▶ Play"; play.disabled = !enclosure;
+        play.addEventListener("click", () => {
+          if (!enclosure) { status.textContent = "This episode has no playable audio link in the public feed."; return; }
+          player.src = enclosure; player.load(); startRainAudio();
+          player.play().then(() => { startRainAudio(); status.textContent = "Playing: " + (episode.title || "Armchair Anonymous"); setStatus("Streaming: " + (episode.title || "Armchair Anonymous")); }).catch(() => { status.textContent = "Playback was blocked or this audio link is unavailable. Try another episode."; });
+          player.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        });
+        actions.appendChild(play);
+        if (episode.link) { const link = document.createElement("a"); link.className = "armchair-episode-link"; link.href = episode.link; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "Details ↗"; actions.appendChild(link); }
+        row.append(details, actions); list.appendChild(row);
+      });
+      status.textContent = "Showing " + episodes.length + " Armchair Anonymous episodes."; 
+    } catch (error) {
+      list.innerHTML = '<div class="podcast-empty"><span aria-hidden="true">♫</span><strong>Could not load the feed</strong><p>Check your connection and try Refresh. Your local audio library still works.</p></div>';
+      status.textContent = "Armchair Anonymous feed unavailable: " + (error.message || "unknown error");
+    } finally { refresh.disabled = false; }
+  };
+  refresh.addEventListener("click", load);
+  await load();
 }
 
 function formatBytes(bytes) {
