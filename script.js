@@ -13,12 +13,13 @@ function openDelta() {
   }
 
   const win = document.createElement("section");
-  win.className = "app-window";
+  win.className = "app-window is-maximized";
   win.dataset.window = "delta";
   win.style.zIndex = ++state.zIndex;
   win.innerHTML = `
     <div class="window-title">
       <span class="mini-glyph">◇</span><strong>Delta-</strong>
+      <button data-maximize title="Restore window" aria-label="Restore window">❐</button>
       <button data-minimize title="Minimize" aria-label="Minimize">−</button>
       <button class="close" data-close title="Close" aria-label="Close">×</button>
     </div>
@@ -104,6 +105,22 @@ document.addEventListener("click", event => {
   const close = event.target.closest("[data-close]");
   if (close) {
     closeApp(close.closest(".app-window").dataset.window);
+    return;
+  }
+  const maximize = event.target.closest("[data-maximize]");
+  if (maximize) {
+    const win = maximize.closest(".app-window");
+    win.classList.toggle("is-maximized");
+    const maximized = win.classList.contains("is-maximized");
+    maximize.textContent = maximized ? "❐" : "□";
+    maximize.title = maximized ? "Restore window" : "Maximize window";
+    maximize.setAttribute("aria-label", maximize.title);
+    if (maximized) {
+      win.style.left = "";
+      win.style.top = "";
+      win.style.width = "";
+      win.style.height = "";
+    }
     return;
   }
   const minimize = event.target.closest("[data-minimize]");
