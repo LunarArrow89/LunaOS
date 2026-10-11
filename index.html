@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f8f3e9">
   <title>LunaOS</title>
-  <link rel="stylesheet" href="style.css?v=18">
+  <link rel="stylesheet" href="style.css?v=19">
 </head>
 <body>
   <header class="topbar">
@@ -24,10 +24,10 @@
     </section>
     <section class="icons" aria-label="Desktop apps">
       <button class="desktop-icon" id="deltaIcon" aria-label="Open Delta-">
-        <span class="icon games-icon">◇</span><span>Delta-</span>
+        <span class="icon games-icon" aria-hidden="true">◆</span><span>Delta-</span>
       </button>
       <button class="desktop-icon" id="podcastIcon" aria-label="Open Podcast Episodes">
-        <span class="icon podcast-icon" aria-hidden="true">〽</span><span>Podcast Episodes</span>
+        <span class="icon podcast-icon sound-wave-icon" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span>Podcast Episodes</span>
       </button>
     </section>
     <section id="windows" aria-label="Open app windows"></section>
@@ -41,6 +41,6 @@
     <button id="taskbarClock" class="taskbar-clock" title="Date and time">--:--</button>
   </footer>
   <audio id="lunaRainAudio" src="./rain.mp3" autoplay loop preload="auto" aria-hidden="true"></audio>
-  <script src="script.js?v=19"></script>
+  <script src="script.js?v=20"></script>
 </body>
 </html>
