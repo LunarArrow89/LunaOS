@@ -1,6 +1,6 @@
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-const DELTA_URL = "https://lunararrow89.github.io/Delta-/";
+const DELTA_URL = "./delta.html";
 const RAIN_URL = "https://www.rainymood.com/";
 const state = { windows: new Map(), zIndex: 10 };
 
