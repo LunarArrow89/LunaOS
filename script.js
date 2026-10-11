@@ -1,6 +1,6 @@
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-const DELTA_URL = "https://github.com/LunarArrow89/Delta-/";
+const DELTA_URL = "https://lunararrow89.github.io/Delta-/";
 const state = { windows: new Map(), zIndex: 10 };
 
 function openDelta() {
@@ -11,6 +11,7 @@ function openDelta() {
     updateDock();
     return;
   }
+
   const win = document.createElement("section");
   win.className = "app-window";
   win.dataset.window = "delta";
@@ -22,21 +23,14 @@ function openDelta() {
       <button class="close" data-close title="Close" aria-label="Close">×</button>
     </div>
     <div class="window-content delta-content">
-      <div class="delta-heading"><span class="delta-symbol">◇</span><div><h2>Delta-</h2><p>Your coding project</p></div></div>
-      <p>Open your Delta- repository in its own window.</p>
-      <button class="action-button" id="launchDeltaWindow">Open Delta- window ↗</button>
-      <p class="muted">GitHub does not allow its repository page to be embedded inside another app, so Delta- opens in a separate window.</p>
+      <iframe class="delta-frame" src="${DELTA_URL}" title="Delta- coding app" allow="fullscreen" loading="eager"></iframe>
     </div>`;
+
   $("#windows").appendChild(win);
   state.windows.set("delta", { element: win, title: "Delta-" });
   makeDraggable(win);
   win.addEventListener("pointerdown", () => focusWindow(win));
   updateDock();
-}
-
-function launchDeltaWindow() {
-  const opened = window.open(DELTA_URL, "_blank", "popup,width=1200,height=800,resizable=yes,scrollbars=yes");
-  if (!opened) alert("The window was blocked. Allow pop-ups for LunaOS, then try again.");
 }
 
 function focusWindow(win) {
@@ -105,10 +99,6 @@ function makeDraggable(win) {
 document.addEventListener("click", event => {
   if (event.target.closest("#openDelta, #deltaIcon, #home")) {
     openDelta();
-    return;
-  }
-  if (event.target.closest("#launchDeltaWindow")) {
-    launchDeltaWindow();
     return;
   }
   const close = event.target.closest("[data-close]");
