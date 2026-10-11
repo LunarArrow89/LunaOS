@@ -13,44 +13,59 @@ function enterLunaFullscreen() {
 }
 
 function openRain() {
-  // Rainy Mood's official player stays open while switching LunaOS windows.
-  // Browser autoplay policies may require a click inside the player.
+  // Play the rain.mp3 file stored in this LunaOS repository.
   enterLunaFullscreen();
+  let audio = document.querySelector("#lunaRainAudio");
   const existing = state.windows.get("rain");
-  if (existing) {
-    existing.element.style.display = "flex";
-    focusWindow(existing.element);
-    updateDock();
-    return;
+
+  if (!audio) {
+    audio = document.createElement("audio");
+    audio.id = "lunaRainAudio";
+    audio.src = "./rain.mp3";
+    audio.loop = true;
+    audio.preload = "auto";
   }
 
-  const win = document.createElement("section");
-  win.className = "app-window rain-window";
-  win.dataset.window = "rain";
-  win.style.zIndex = ++state.zIndex;
-  win.style.left = "5%";
-  win.style.top = "8%";
-  win.style.width = "min(520px, 90%)";
-  win.style.height = "min(420px, 75%)";
-  win.innerHTML = `
-    <div class="window-title">
-      <span class="mini-glyph">☔</span><strong>Rainy Mood</strong>
-      <button data-minimize title="Minimize" aria-label="Minimize">−</button>
-      <button class="close" data-close title="Close" aria-label="Close">×</button>
-    </div>
-    <div class="window-content rain-content">
-      <iframe class="rain-frame" src="${RAIN_URL}" title="Rainy Mood rain sounds"
-        allow="autoplay; fullscreen" loading="eager"></iframe>
-    </div>`;
+  if (!existing) {
+    const win = document.createElement("section");
+    win.className = "app-window rain-window";
+    win.dataset.window = "rain";
+    win.style.zIndex = ++state.zIndex;
+    win.style.left = "5%";
+    win.style.top = "8%";
+    win.style.width = "min(420px, 90%)";
+    win.style.height = "auto";
+    win.innerHTML = `
+      <div class="window-title">
+        <span class="mini-glyph">☔</span><strong>Rain Sounds</strong>
+        <button data-minimize title="Minimize" aria-label="Minimize">−</button>
+        <button class="close" data-close title="Close" aria-label="Close">×</button>
+      </div>
+      <div class="window-content rain-content">
+        <p>Rain sounds are playing from <strong>rain.mp3</strong>.</p>
+        <div class="rain-audio-controls"></div>
+      </div>`;
+    $(".rain-audio-controls", win).appendChild(audio);
+    $("#windows").appendChild(win);
+    state.windows.set("rain", { element: win, title: "Rain Sounds" });
+    makeDraggable(win);
+    makeResizable(win);
+    win.addEventListener("pointerdown", () => focusWindow(win));
+  } else {
+    existing.element.style.display = "flex";
+    focusWindow(existing.element);
+    if (!audio.isConnected) $(".rain-audio-controls", existing.element).appendChild(audio);
+  }
 
-  $("#windows").appendChild(win);
-  state.windows.set("rain", { element: win, title: "Rainy Mood" });
-  makeDraggable(win);
-  makeResizable(win);
-  win.addEventListener("pointerdown", () => focusWindow(win));
+  audio.play().then(() => {
+    const status = $(".rain-content p", state.windows.get("rain").element);
+    if (status) status.textContent = "Rain sounds are playing from rain.mp3.";
+  }).catch(() => {
+    const status = $(".rain-content p", state.windows.get("rain").element);
+    if (status) status.textContent = "Press Play below to start the rain sounds.";
+  });
   updateDock();
 }
-
 function openDelta() {
   enterLunaFullscreen();
   const existing = state.windows.get("delta");
