@@ -158,7 +158,12 @@ async function setupPodcastLibrary(win) {
         activeAudioUrl = URL.createObjectURL(episode.file);
         const audio = $("#podcastNowPlaying", win);
         audio.src = activeAudioUrl;
-        audio.play().then(() => setStatus("Playing: " + episode.title)).catch(() => setStatus("Couldn't play this file. Try an MP3 or WAV file."));
+        // Keep the rain ambience running alongside podcast audio.
+        startRainAudio();
+        audio.play().then(() => {
+          startRainAudio();
+          setStatus("Playing: " + episode.title);
+        }).catch(() => setStatus("Couldn't play this file. Try an MP3 or WAV file."));
         audio.scrollIntoView({ behavior: "smooth", block: "nearest" });
       });
       const remove = document.createElement("button");
@@ -459,11 +464,28 @@ localStorage.removeItem("hearth-app-links");
 function startRainAudio() {
   const audio = $("#lunaRainAudio");
   if (!audio) return;
+  audio.loop = true;
+  audio.muted = false;
   audio.volume = 0.45;
-  const attempt = audio.play();
-  if (attempt && typeof attempt.catch === "function") attempt.catch(() => {
-    // Browsers block audible autoplay until the visitor interacts. Retry
-    // silently in the background after the first normal interaction.
+  // Rain is a separate audio stream from podcasts and other app sounds.
+  // Never pause it just because another audio player starts.
+  if (audio.paused) {
+    const attempt = audio.play();
+    if (attempt && typeof attempt.catch === "function") attempt.catch(() => {
+      // Browsers may block autoplay until the visitor interacts.
+    });
+  }
+}
+// If the browser or a page lifecycle event pauses the ambience, try again
+// after the next user interaction. Starting a podcast also explicitly calls
+// startRainAudio(), so both streams can play at the same time.
+const rainAudio = $("#lunaRainAudio");
+if (rainAudio) {
+  rainAudio.addEventListener("pause", () => {
+    if (!document.hidden) startRainAudio();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) startRainAudio();
   });
 }
 function setupRainEffects() {
