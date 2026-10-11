@@ -40,8 +40,72 @@ function openDelta() {
   $("#windows").appendChild(win);
   state.windows.set("delta", { element: win, title: "Delta-" });
   makeDraggable(win);
+  makeResizable(win);
   win.addEventListener("pointerdown", () => focusWindow(win));
   updateDock();
+}
+
+function makeResizable(win) {
+  const parent = $("#windows");
+  const edges = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
+  edges.forEach(edge => {
+    const handle = document.createElement("div");
+    handle.className = "window-resize-handle " + edge;
+    handle.setAttribute("aria-label", "Resize window from " + edge);
+    handle.addEventListener("pointerdown", event => {
+      if (win.classList.contains("is-maximized")) return;
+      event.preventDefault();
+      event.stopPropagation();
+      focusWindow(win);
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const startWidth = win.offsetWidth;
+      const startHeight = win.offsetHeight;
+      const startLeft = win.offsetLeft;
+      const startTop = win.offsetTop;
+      const bounds = parent.getBoundingClientRect();
+      const minWidth = 280;
+      const minHeight = 220;
+
+      const move = moveEvent => {
+        const dx = moveEvent.clientX - startX;
+        const dy = moveEvent.clientY - startY;
+        let width = startWidth;
+        let height = startHeight;
+        let left = startLeft;
+        let top = startTop;
+
+        if (edge.includes("e")) width = Math.min(bounds.width - startLeft, startWidth + dx);
+        if (edge.includes("s")) height = Math.min(bounds.height - startTop, startHeight + dy);
+        if (edge.includes("w")) {
+          width = Math.min(startWidth - dx, startLeft + startWidth);
+          left = startLeft + startWidth - width;
+        }
+        if (edge.includes("n")) {
+          height = Math.min(startHeight - dy, startTop + startHeight);
+          top = startTop + startHeight - height;
+        }
+
+        width = Math.max(minWidth, width);
+        height = Math.max(minHeight, height);
+        left = Math.max(0, Math.min(bounds.width - width, left));
+        top = Math.max(0, Math.min(bounds.height - height, top));
+        win.style.width = width + "px";
+        win.style.height = height + "px";
+        win.style.left = left + "px";
+        win.style.top = top + "px";
+      };
+      const stop = () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", stop);
+        window.removeEventListener("pointercancel", stop);
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", stop);
+      window.addEventListener("pointercancel", stop);
+    });
+    win.appendChild(handle);
+  });
 }
 
 function focusWindow(win) {
