@@ -767,4 +767,12 @@ function restoreOpenWindows() {
   });
   updateDock();
 }
+// Add the puzzle shortcut without changing the desktop's existing markup.
+const puzzleShortcut = document.createElement("button");
+puzzleShortcut.className = "desktop-icon";
+puzzleShortcut.id = "2048Icon";
+puzzleShortcut.setAttribute("aria-label", "Open 2048");
+puzzleShortcut.innerHTML = '<span class="icon game2048-icon" aria-hidden="true">2048</span><span>2048</span>';
+$(".icons").appendChild(puzzleShortcut);
+
 restoreOpenWindows();
