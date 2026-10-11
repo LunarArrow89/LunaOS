@@ -962,7 +962,7 @@ editor.addEventListener("input", () => {
     saveStatus.textContent = "Autosaved: " + (projectName.value.trim() || "Untitled Project");
   }
 });
-projectName.addEventListener("input", () => {
+projectName.addEventListener("change", () => {
   if (editor.value) saveCurrentProject();
 });
 window.addEventListener("pagehide", () => {
