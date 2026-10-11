@@ -250,15 +250,44 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 }
 
 
-/* Delta- can be freely resized after restoring it from fullscreen. */
+/* Delta- can be resized from every edge and corner when restored. */
 .app-window:has(.delta-frame):not(.is-maximized) {
-  resize: both;
+  resize: none;
   min-width: 280px;
   min-height: 220px;
-  max-width: calc(100% - 8px);
-  max-height: calc(100% - 8px);
+  max-width: none;
+  max-height: none;
 }
 .app-window:has(.delta-frame):not(.is-maximized) .delta-frame {
   min-width: 0;
   min-height: 0;
+}
+.window-resize-handle {
+  position: absolute;
+  z-index: 30;
+  display: block;
+  touch-action: none;
+}
+.window-resize-handle.n,
+.window-resize-handle.s { left: 10px; right: 10px; height: 8px; cursor: ns-resize; }
+.window-resize-handle.n { top: 0; }
+.window-resize-handle.s { bottom: 0; }
+.window-resize-handle.e,
+.window-resize-handle.w { top: 10px; bottom: 10px; width: 8px; cursor: ew-resize; }
+.window-resize-handle.e { right: 0; }
+.window-resize-handle.w { left: 0; }
+.window-resize-handle.ne,
+.window-resize-handle.nw,
+.window-resize-handle.se,
+.window-resize-handle.sw { width: 15px; height: 15px; }
+.window-resize-handle.ne { top: 0; right: 0; cursor: nesw-resize; }
+.window-resize-handle.nw { top: 0; left: 0; cursor: nwse-resize; }
+.window-resize-handle.se { right: 0; bottom: 0; cursor: nwse-resize; }
+.window-resize-handle.sw { left: 0; bottom: 0; cursor: nesw-resize; }
+.app-window.is-maximized .window-resize-handle { display: none; }
+@media (max-width: 650px) {
+  .app-window:has(.delta-frame):not(.is-maximized) {
+    max-width: calc(100% - 8px);
+    max-height: calc(100% - 8px);
+  }
 }
