@@ -76,9 +76,10 @@ function openPodcast() {
       </div>
       <section class="armchair-section" aria-labelledby="armchairHeading">
         <div class="armchair-heading"><div><p class="podcast-kicker">FROM THE OFFICIAL PODCAST FEED</p><h3 id="armchairHeading">Armchair Anonymous</h3></div><button type="button" class="armchair-refresh" id="armchairRefresh">↻ Refresh</button></div>
-        <p class="armchair-description">Browse episodes here and play them in LunaOS. Audio streams from the publisher; it is not copied into your device library.</p>
-        <p class="podcast-status" id="armchairStatus" role="status">Loading Armchair Anonymous episodes…</p>
-        <div id="armchairEpisodeList" class="armchair-episode-list"><p class="muted">Loading episodes…</p></div>
+        <p class="armchair-description">Browse the official Armchair Expert website directly here. Open the site in a new tab if its player or page does not load inside LunaOS.</p>
+        <p class="podcast-status" id="armchairStatus" role="status">Opening the official Armchair Expert website…</p>
+        <iframe id="armchairEpisodeList" class="armchair-site-frame" title="Official Armchair Expert episodes" src="https://armchairexpertpod.com/pods"></iframe>
+        <a class="armchair-episode-link armchair-open-site" href="https://armchairexpertpod.com/armchair-anonymous-show" target="_blank" rel="noopener noreferrer">Open Armchair Anonymous ↗</a>
       </section>
       <label class="podcast-upload" for="podcastFiles">＋ Add episode audio files</label>
       <input id="podcastFiles" class="podcast-file-input" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac,.flac" multiple>
@@ -228,80 +229,26 @@ async function setupPodcastLibrary(win) {
   win.addEventListener("remove", () => { if (activeAudioUrl) URL.revokeObjectURL(activeAudioUrl); });
 }
 
-async function setupArmchairAnonymous(win, player, setStatus) {
-  const list = $("#armchairEpisodeList", win);
+function setupArmchairAnonymous(win, player, setStatus) {
+  const frame = $("#armchairEpisodeList", win);
   const status = $("#armchairStatus", win);
   const refresh = $("#armchairRefresh", win);
-  if (!list || !status || !refresh) return;
-  const load = async () => {
-    status.textContent = "Loading Armchair Anonymous episodes…";
-    list.innerHTML = '<p class="muted">Fetching the public podcast feed…</p>';
+  if (!frame || !status || !refresh) return;
+  const officialEpisodesUrl = "https://armchairexpertpod.com/pods";
+  frame.src = officialEpisodesUrl;
+  frame.addEventListener("load", () => {
+    status.textContent = "Official Armchair Expert website loaded. Browse the episode list above.";
+    setStatus("Armchair Expert episodes are shown from the official website.");
+  });
+  frame.addEventListener("error", () => {
+    status.textContent = "The official website could not be embedded. Use the Open Armchair Anonymous link below.";
+  });
+  refresh.addEventListener("click", () => {
+    status.textContent = "Refreshing the official Armchair Expert website…";
     refresh.disabled = true;
-    try {
-      let episodes = [];
-      let sourceError = "";
-      // Prefer Apple's public podcast catalogue API; it avoids the third-party RSS converter
-      // that was returning HTTP 500. The official RSS converter remains a fallback.
-      try {
-        const appleUrl = "https://itunes.apple.com/lookup?id=1345682353&entity=podcastEpisode&limit=200";
-        const appleResponse = await fetch(appleUrl, { cache: "no-store" });
-        if (!appleResponse.ok) throw new Error("Podcast catalogue returned HTTP " + appleResponse.status);
-        const appleData = await appleResponse.json();
-        if (!Array.isArray(appleData.results)) throw new Error("Unexpected catalogue response.");
-        episodes = appleData.results
-          .filter(item => /^armchair anonymous\s*:/i.test((item.trackName || "").trim()))
-          .map(item => ({
-            title: item.trackName,
-            enclosure: item.episodeUrl ? { link: item.episodeUrl } : null,
-            pubDate: item.releaseDate,
-            itunes: { duration: Number.isFinite(item.trackTimeMillis) ? Math.round(item.trackTimeMillis / 1000) : "" },
-            link: item.trackViewUrl || ""
-          }));
-        if (!episodes.length) throw new Error("No matching episodes in catalogue response.");
-      } catch (error) {
-        sourceError = error.message || "Podcast catalogue unavailable";
-        try {
-          const endpoint = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(ARMCHAIR_FEED_URL);
-          const response = await fetch(endpoint, { cache: "no-store" });
-          if (!response.ok) throw new Error("RSS converter returned HTTP " + response.status);
-          const data = await response.json();
-          if (data.status !== "ok" || !Array.isArray(data.items)) throw new Error(data.message || "RSS feed could not be read.");
-          episodes = data.items.filter(item => /^armchair anonymous\s*:/i.test((item.title || "").trim()));
-        } catch (fallbackError) {
-          throw new Error(sourceError + "; RSS fallback: " + (fallbackError.message || "unavailable"));
-        }
-      }
-      list.innerHTML = "";
-      if (!episodes.length) { list.innerHTML = '<p class="muted">No Armchair Anonymous episodes were found in the feed right now.</p>'; status.textContent = "Feed loaded, but no matching episodes were found."; return; }
-      episodes.forEach(episode => {
-        const enclosure = episode.enclosure && episode.enclosure.link;
-        const row = document.createElement("article"); row.className = "podcast-episode armchair-episode";
-        const details = document.createElement("div"); details.className = "podcast-episode-details";
-        const title = document.createElement("strong"); title.textContent = episode.title || "Armchair Anonymous";
-        const meta = document.createElement("small");
-        const date = episode.pubDate ? new Date(episode.pubDate).toLocaleDateString() : "Armchair Anonymous";
-        const duration = episode.itunes && episode.itunes.duration ? " · " + episode.itunes.duration : "";
-        meta.textContent = date + duration; details.append(title, meta);
-        const actions = document.createElement("div"); actions.className = "podcast-episode-actions";
-        const play = document.createElement("button"); play.type = "button"; play.className = "podcast-play"; play.textContent = "▶ Play"; play.disabled = !enclosure;
-        play.addEventListener("click", () => {
-          if (!enclosure) { status.textContent = "This episode has no playable audio link in the public feed."; return; }
-          player.src = enclosure; player.load(); startRainAudio();
-          player.play().then(() => { startRainAudio(); status.textContent = "Playing: " + (episode.title || "Armchair Anonymous"); setStatus("Streaming: " + (episode.title || "Armchair Anonymous")); }).catch(() => { status.textContent = "Playback was blocked or this audio link is unavailable. Try another episode."; });
-          player.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        });
-        actions.appendChild(play);
-        if (episode.link) { const link = document.createElement("a"); link.className = "armchair-episode-link"; link.href = episode.link; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "Details ↗"; actions.appendChild(link); }
-        row.append(details, actions); list.appendChild(row);
-      });
-      status.textContent = "Showing " + episodes.length + " Armchair Anonymous episodes."; 
-    } catch (error) {
-      list.innerHTML = '<div class="podcast-empty"><span aria-hidden="true">♫</span><strong>Could not load the feed</strong><p>Check your connection and try Refresh. Your local audio library still works.</p></div>';
-      status.textContent = "Armchair Anonymous feed unavailable: " + (error.message || "unknown error");
-    } finally { refresh.disabled = false; }
-  };
-  refresh.addEventListener("click", load);
-  await load();
+    frame.src = officialEpisodesUrl + "?luna_refresh=" + Date.now();
+    window.setTimeout(() => { refresh.disabled = false; }, 1200);
+  });
 }
 
 function formatBytes(bytes) {
