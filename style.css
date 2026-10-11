@@ -119,3 +119,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .delta-symbol { width: 56px; height: 56px; display: grid; place-items: center; border-radius: 16px; background: #d5e2cd; color: #52694a; font-size: 34px; }
 .delta-heading h2 { margin: 0; }
 .delta-heading p { margin: 4px 0 0; }
+
+
+/* Delta- runs directly inside its LunaOS window. */
+.delta-content { display: block; padding: 0; overflow: hidden; }
+.delta-frame { display: block; width: 100%; height: 100%; min-height: 0; border: 0; background: #fff; }
