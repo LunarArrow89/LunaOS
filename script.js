@@ -652,7 +652,7 @@ function startRainAudio() {
   audio.muted = false;
   // Lift the rain slightly while an uploaded podcast is playing so both are audible.
   const podcastPlayer = $("#podcastNowPlaying");
-  audio.volume = podcastPlayer && !podcastPlayer.paused && !podcastPlayer.ended ? 0.58 : 0.45;
+  audio.volume = podcastPlayer && !podcastPlayer.paused && !podcastPlayer.ended ? 0.85 : 0.75;
   // Rain is a separate audio stream from podcasts and other app sounds.
   // Never pause it just because another audio player starts.
   if (audio.paused) {
