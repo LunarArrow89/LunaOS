@@ -12,6 +12,45 @@ function enterLunaFullscreen() {
   }
 }
 
+function openRain() {
+  // Rainy Mood's official player stays open while switching LunaOS windows.
+  // Browser autoplay policies may require a click inside the player.
+  enterLunaFullscreen();
+  const existing = state.windows.get("rain");
+  if (existing) {
+    existing.element.style.display = "flex";
+    focusWindow(existing.element);
+    updateDock();
+    return;
+  }
+
+  const win = document.createElement("section");
+  win.className = "app-window rain-window";
+  win.dataset.window = "rain";
+  win.style.zIndex = ++state.zIndex;
+  win.style.left = "5%";
+  win.style.top = "8%";
+  win.style.width = "min(520px, 90%)";
+  win.style.height = "min(420px, 75%)";
+  win.innerHTML = `
+    <div class="window-title">
+      <span class="mini-glyph">☔</span><strong>Rainy Mood</strong>
+      <button data-minimize title="Minimize" aria-label="Minimize">−</button>
+      <button class="close" data-close title="Close" aria-label="Close">×</button>
+    </div>
+    <div class="window-content rain-content">
+      <iframe class="rain-frame" src="${RAIN_URL}" title="Rainy Mood rain sounds"
+        allow="autoplay; fullscreen" loading="eager"></iframe>
+    </div>`;
+
+  $("#windows").appendChild(win);
+  state.windows.set("rain", { element: win, title: "Rainy Mood" });
+  makeDraggable(win);
+  makeResizable(win);
+  win.addEventListener("pointerdown", () => focusWindow(win));
+  updateDock();
+}
+
 function openDelta() {
   enterLunaFullscreen();
   const existing = state.windows.get("delta");
@@ -175,7 +214,7 @@ function makeDraggable(win) {
 
 document.addEventListener("click", event => {
   if (event.target.closest("#rainSounds")) {
-    window.open(RAIN_URL, "_blank", "noopener");
+    openRain();
     return;
   }
   if (event.target.closest("#openDelta, #deltaIcon, #home")) {
