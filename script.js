@@ -546,6 +546,24 @@ document.addEventListener("click", event => {
 
     // Podcast has its own maximize/restore toggle so it can fill LunaOS
     // without changing the fullscreen state of the whole desktop.
+    if (win.dataset.window === "2048") {
+      if (win.classList.contains("is-maximized")) {
+        win.classList.remove("is-maximized");
+        win.style.left = "";
+        win.style.top = "";
+        win.style.width = "";
+        win.style.height = "";
+      } else {
+        win.classList.add("is-maximized");
+        win.style.left = "0";
+        win.style.top = "0";
+        win.style.width = "100%";
+        win.style.height = "100%";
+      }
+      updateMaximizeButton(win);
+      return;
+    }
+
     if (win.dataset.window === "podcast") {
       if (win.classList.contains("is-maximized")) {
         win.classList.remove("is-maximized");
@@ -599,7 +617,11 @@ function updateMaximizeButton(win) {
   if (!button) return;
   const maximized = win.classList.contains("is-maximized");
   button.textContent = maximized ? "❐" : "□";
-  button.title = document.fullscreenElement === document.documentElement ? "Restore resizable window" : "Enter fullscreen";
+  if (win.dataset.window === "2048") {
+    button.title = maximized ? "Restore window" : "Fullscreen";
+  } else {
+    button.title = document.fullscreenElement === document.documentElement ? "Restore resizable window" : "Enter fullscreen";
+  }
   button.setAttribute("aria-label", button.title);
 }
 
@@ -608,8 +630,8 @@ document.addEventListener("fullscreenchange", () => {
   document.body.classList.toggle("luna-fullscreen", pageFullscreen);
   $$(".app-window").forEach(win => {
     if (win.dataset.window !== "delta") {
-      // Podcast maximization is independent of browser fullscreen mode.
-      if (win.dataset.window === "podcast") updateMaximizeButton(win);
+      // These app windows maximize within LunaOS without toggling browser fullscreen.
+      if (win.dataset.window === "podcast" || win.dataset.window === "2048") updateMaximizeButton(win);
       return;
     }
     if (pageFullscreen) {
