@@ -1,0 +1,115 @@
+:root {
+  --paper: #eee6d8;
+  --cream: #fbf6ec;
+  --sage: #dce5d3;
+  --sage-dark: #62745b;
+  --ink: #51483d;
+  --muted: #8a7d6a;
+  --line: #ded3c1;
+  --accent: #7d9270;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+body { font-family: "Trebuchet MS", Arial, sans-serif; color: var(--ink); background: var(--paper); }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid #8da27e; outline-offset: 2px; }
+.topbar { position: absolute; z-index: 5; top: 0; left: 0; right: 0; height: 55px; padding: 0 23px; display: flex; align-items: center; justify-content: space-between; background: rgba(251,246,236,.94); border-bottom: 1px solid var(--line); }
+.logo { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: bold; color: var(--sage-dark); }
+.logo-cup { display: grid; place-items: center; width: 32px; height: 32px; background: #e3eadb; border-radius: 11px; font-size: 18px; }
+.topbar-right { display: flex; align-items: center; gap: 9px; font-size: 10px; letter-spacing: 1px; color: var(--muted); }
+.online-dot { width: 7px; height: 7px; border-radius: 50%; background: #8da27e; }
+#clock { margin-left: 12px; letter-spacing: 0; font-size: 12px; color: var(--ink); }
+.desktop { position: absolute; top: 55px; bottom: 58px; left: 0; right: 0; overflow: hidden; background: radial-gradient(ellipse at 78% 28%, #e0e8d5 0%, transparent 39%), linear-gradient(135deg, #f0e7d8, #e8dfd0); }
+.desktop:before { content: ""; position: absolute; inset: 0; opacity: .15; pointer-events: none; background-image: radial-gradient(#a8987d 0.65px, transparent 0.65px); background-size: 13px 13px; }
+.sun-glow { position: absolute; width: 340px; height: 340px; right: 12%; top: 14%; border-radius: 50%; background: rgba(255,250,225,.34); box-shadow: 0 0 80px rgba(255,250,225,.35); pointer-events: none; }
+.leaf { position: absolute; color: rgba(119,143,103,.17); font-size: 180px; pointer-events: none; }
+.leaf-one { right: 14%; bottom: -18px; transform: rotate(-22deg); }
+.leaf-two { right: 28%; top: 12%; font-size: 100px; transform: rotate(17deg); }
+.welcome { position: absolute; z-index: 1; top: 50%; left: clamp(30px, 13vw, 190px); transform: translateY(-53%); }
+.eyebrow { color: #89957b; font-size: 10px; letter-spacing: 2px; margin: 0 0 17px; }
+.welcome h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(42px, 6vw, 74px); line-height: 1.06; font-weight: normal; letter-spacing: -1.8px; margin: 0 0 17px; color: #5c6951; }
+.welcome h1 em { color: #9a7961; font-weight: normal; }
+.subtitle { margin: 0 0 25px; color: #857966; font-size: 14px; }
+.welcome-button { border: 1px solid #c4cfb9; border-radius: 11px; padding: 12px 15px; background: rgba(251,246,236,.78); color: #5f7357; font-size: 12px; box-shadow: 0 5px 18px rgba(91,83,63,.07); }
+.welcome-button:hover { background: #fffaf1; transform: translateY(-1px); }
+.welcome-button span { margin-left: 17px; }
+.icons { position: absolute; z-index: 2; top: 22px; right: 25px; display: flex; flex-direction: column; gap: 7px; }
+.desktop-icon { width: 88px; padding: 9px 4px; display: flex; flex-direction: column; align-items: center; gap: 7px; border: 1px solid transparent; border-radius: 14px; background: transparent; font-size: 11px; }
+.desktop-icon:hover { background: rgba(255,250,241,.72); border-color: #d8d0bf; }
+.icon { width: 45px; height: 45px; display: grid; place-items: center; border-radius: 14px; font-size: 23px; box-shadow: 0 4px 10px rgba(101,84,59,.09); }
+.notes-icon { background: #f5d9b5; }
+.games-icon { background: #d5e2cd; }
+.projects-icon { background: #e9d3ce; }
+.library-icon { background: #d9dfef; }
+.settings-icon { background: #e8dfc9; }
+#windows { position: absolute; z-index: 4; inset: 0; pointer-events: none; }
+.app-window { position: absolute; top: 12%; left: 22%; width: min(600px, 72%); height: min(440px, 78%); min-width: 275px; min-height: 230px; display: flex; flex-direction: column; overflow: hidden; pointer-events: auto; border: 1px solid #d6cbb9; border-radius: 16px; background: #fffaf1; box-shadow: 0 15px 45px rgba(92,74,48,.2); }
+.window-title { min-height: 47px; display: flex; align-items: center; gap: 9px; padding: 9px 13px; background: #e5ebdc; border-bottom: 1px solid #d7dfcf; cursor: grab; user-select: none; touch-action: none; }
+.window-title:active { cursor: grabbing; }
+.window-title strong { flex: 1; font-size: 12px; font-weight: bold; }
+.window-title .mini-glyph { font-size: 17px; }
+.window-title button { width: 27px; height: 27px; border: 0; border-radius: 8px; background: transparent; font-size: 17px; }
+.window-title button:hover { background: rgba(90,105,77,.12); }
+.window-title button.close:hover { background: #e7c7bc; }
+.window-content { flex: 1; min-height: 0; overflow: auto; padding: 20px; font-size: 13px; }
+.window-content h2 { font-family: Georgia, serif; font-weight: normal; font-size: 25px; color: #617156; margin: 0 0 10px; }
+.window-content h3 { font-size: 13px; margin: 19px 0 8px; }
+.window-content p { color: #857966; line-height: 1.6; }
+.panel { padding: 14px; border: 1px solid #e2dacb; border-radius: 12px; background: #f8f3e9; margin-top: 13px; }
+.field-label { display: block; margin: 13px 0 6px; color: #7f8c72; font-size: 10px; letter-spacing: 1px; }
+.text-field, .text-area { width: 100%; padding: 11px; border: 1px solid #ddd2c0; border-radius: 10px; background: #fffdf8; color: var(--ink); }
+.text-area { min-height: 150px; resize: vertical; line-height: 1.5; }
+.action-button { margin-top: 10px; padding: 9px 13px; border: 1px solid #c4cfb9; border-radius: 9px; background: #e4eadc; color: #586d50; font-size: 12px; }
+.action-button:hover { background: #d8e3ce; }
+.muted { color: #958875; font-size: 11px; }
+.app-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.app-row { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #e5dccd; border-radius: 10px; background: #fffdf8; }
+.app-row .row-name { min-width: 0; flex: 1; }
+.app-row strong { font-size: 12px; }
+.app-row small { display: block; margin-top: 4px; color: #978a78; overflow-wrap: anywhere; }
+.app-row button { border: 0; background: #e7eddf; color: #5d7255; border-radius: 8px; padding: 7px 9px; font-size: 11px; }
+.app-row button.remove-link { background: #f2e1d9; color: #8a6052; }
+.embedded-app { width: 100%; height: 100%; border: 0; background: white; }
+.app-launch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); gap: 9px; margin-top: 14px; }
+.app-tile { display: flex; align-items: center; gap: 9px; padding: 11px; text-align: left; border: 1px solid #e2dacb; border-radius: 11px; background: #fffdf8; font-size: 12px; }
+.app-tile:hover { background: #f0f3e9; }
+.taskbar { position: absolute; z-index: 10; bottom: 0; left: 0; right: 0; height: 58px; padding: 0 17px; display: flex; align-items: center; gap: 12px; background: rgba(251,246,236,.96); border-top: 1px solid var(--line); }
+#home { width: 38px; height: 38px; border: 0; border-radius: 12px; background: #dce5d3; font-size: 20px; }
+#home:hover { background: #cedbc3; }
+.dock-label { color: #8a7d6a; font-size: 11px; }
+#openApps { display: flex; align-items: center; gap: 6px; min-width: 0; }
+#openApps button { max-width: 135px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 8px 11px; border: 1px solid transparent; border-radius: 10px; background: #eee9dd; font-size: 11px; }
+#openApps button:hover, #openApps button.selected { background: #e1e8d9; border-color: #d2dcc9; }
+.dock-spacer { flex: 1; }
+.dock-note { color: #8a947c; font-size: 11px; white-space: nowrap; }
+.taskbar-clock { border: 0; background: transparent; font-size: 12px; min-width: 65px; text-align: right; }
+.launcher { position: absolute; z-index: 20; left: 15px; bottom: 69px; width: min(340px, calc(100vw - 30px)); padding: 17px; border: 1px solid #d6cbb9; border-radius: 16px; background: rgba(255,250,241,.98); box-shadow: 0 16px 50px rgba(92,74,48,.2); }
+.hidden { display: none !important; }
+.launcher-title { display: flex; align-items: center; justify-content: space-between; color: #65765b; font-size: 10px; letter-spacing: 1.2px; margin-bottom: 13px; }
+.launcher-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.launcher-grid button { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 10px 2px; border: 1px solid transparent; border-radius: 10px; background: transparent; font-size: 11px; }
+.launcher-grid button:hover { background: #f0f3e9; border-color: #e0e5d8; }
+.launcher-grid .icon { width: 39px; height: 39px; font-size: 20px; }
+.launcher > p { border-top: 1px solid #eee5d7; padding-top: 11px; margin: 12px 0 0; font-size: 10px; color: #958875; }
+@media (max-width: 650px) {
+  .topbar { height: 50px; padding: 0 12px; }
+  .topbar-right { font-size: 8px; gap: 5px; letter-spacing: .4px; }
+  #clock { margin-left: 4px; font-size: 10px; }
+  .desktop { top: 50px; bottom: 56px; }
+  .welcome { top: 51%; left: 6%; right: 80px; }
+  .welcome h1 { font-size: clamp(34px, 8vw, 49px); letter-spacing: -1px; }
+  .eyebrow { font-size: 8px; letter-spacing: 1px; }
+  .subtitle { font-size: 12px; line-height: 1.5; }
+  .icons { top: 10px; right: 4px; gap: 2px; }
+  .desktop-icon { width: 70px; padding: 7px 2px; font-size: 10px; }
+  .icon { width: 37px; height: 37px; font-size: 20px; border-radius: 12px; }
+  .leaf-one { right: -20px; font-size: 130px; }
+  .app-window { top: 4%; left: 4%; width: 92%; height: 90%; min-width: 0; }
+  .window-content { padding: 14px; }
+  .taskbar { height: 56px; padding: 0 9px; gap: 7px; }
+  .dock-label, .dock-note { display: none; }
+  #openApps { gap: 3px; }
+  #openApps button { max-width: 95px; padding: 8px; font-size: 10px; }
+  .taskbar-clock { min-width: 48px; font-size: 11px; }
+}
