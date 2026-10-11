@@ -106,7 +106,7 @@ function openApp(app) {
     </div>
     <div class="window-content">${appContent(app)}</div>`;
   $("#windows").appendChild(win);
-  state.windows.set(app, { element: win });
+  state.windows.set(app, { element: win, title });
   makeDraggable(win);
   win.addEventListener("pointerdown", () => focusWindow(win));
   updateDock();
@@ -128,7 +128,8 @@ function updateDock() {
   holder.innerHTML = "";
   for (const [app, record] of state.windows) {
     const button = document.createElement("button");
-    button.textContent = (app === "welcome" ? "☕ Welcome" : appIcon(app) + " " + APP_INFO[app].title);
+    const label = record.title || (app === "welcome" ? "Welcome" : APP_INFO[app]?.title || "App");
+    button.textContent = (app === "welcome" ? "☕ " : app.startsWith("webapp-") ? "🌐 " : appIcon(app) + " ") + label;
     button.title = "Show or minimize " + button.textContent;
     button.className = record.element.style.display !== "none" ? "selected" : "";
     button.addEventListener("click", () => {
@@ -179,7 +180,7 @@ function launchLink(index) {
     win.className = "app-window"; win.dataset.window = key; win.style.zIndex = ++state.zIndex;
     win.innerHTML = `<div class="window-title"><span class="mini-glyph">🌐</span><strong>${escapeHTML(link.name)}</strong><button data-minimize title="Minimize">−</button><button class="close" data-close title="Close">×</button></div><div class="window-content" style="padding:0"><iframe class="embedded-app" title="${escapeHTML(link.name)}" src="${escapeHTML(link.url)}" referrerpolicy="no-referrer"></iframe></div>`;
     $("#windows").appendChild(win);
-    state.windows.set(key, { element: win });
+    state.windows.set(key, { element: win, title: link.name });
     makeDraggable(win); win.addEventListener("pointerdown", () => focusWindow(win)); updateDock();
   } else window.open(link.url, "_blank", "noopener,noreferrer");
 }
