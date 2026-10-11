@@ -1640,8 +1640,6 @@ fileList.addEventListener("click", event => {
     if (!item || item.dataset.file === "main.delta") return;
     const name = item.dataset.file;
     if (name === activeFileName) {
-      saveActiveFile();
-      activeFileName = "main.delta";
       const main = fileList.querySelector('[data-file="main.delta"]');
       if (main) setActiveFile(main);
     }
@@ -1683,8 +1681,6 @@ document.addEventListener("click", event => {
   const action = button.dataset.action;
   if (action === "delete" && name !== "main.delta") {
     if (name === activeFileName) {
-      saveActiveFile();
-      activeFileName = "main.delta";
       const main = fileList.querySelector('[data-file="main.delta"]');
       if (main) setActiveFile(main);
     }
