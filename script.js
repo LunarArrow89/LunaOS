@@ -238,12 +238,38 @@ async function setupArmchairAnonymous(win, player, setStatus) {
     list.innerHTML = '<p class="muted">Fetching the public podcast feed…</p>';
     refresh.disabled = true;
     try {
-      const endpoint = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(ARMCHAIR_FEED_URL);
-      const response = await fetch(endpoint, { cache: "no-store" });
-      if (!response.ok) throw new Error("Feed service returned HTTP " + response.status);
-      const data = await response.json();
-      if (data.status !== "ok" || !Array.isArray(data.items)) throw new Error(data.message || "The podcast feed could not be read.");
-      const episodes = data.items.filter(item => /^armchair anonymous\s*:/i.test((item.title || "").trim()));
+      let episodes = [];
+      let sourceError = "";
+      // Prefer Apple's public podcast catalogue API; it avoids the third-party RSS converter
+      // that was returning HTTP 500. The official RSS converter remains a fallback.
+      try {
+        const appleUrl = "https://itunes.apple.com/lookup?id=1345682353&entity=podcastEpisode&limit=200";
+        const appleResponse = await fetch(appleUrl, { cache: "no-store" });
+        if (!appleResponse.ok) throw new Error("Podcast catalogue returned HTTP " + appleResponse.status);
+        const appleData = await appleResponse.json();
+        if (!Array.isArray(appleData.results)) throw new Error("Unexpected catalogue response.");
+        episodes = appleData.results
+          .filter(item => /^armchair anonymous\s*:/i.test((item.trackName || "").trim()))
+          .map(item => ({
+            title: item.trackName,
+            enclosure: item.episodeUrl ? { link: item.episodeUrl } : null,
+            pubDate: item.releaseDate,
+            itunes: { duration: Number.isFinite(item.trackTimeMillis) ? Math.round(item.trackTimeMillis / 1000) : "" },
+            link: item.trackViewUrl || ""
+          }));
+      } catch (error) {
+        sourceError = error.message || "Podcast catalogue unavailable";
+        try {
+          const endpoint = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(ARMCHAIR_FEED_URL);
+          const response = await fetch(endpoint, { cache: "no-store" });
+          if (!response.ok) throw new Error("RSS converter returned HTTP " + response.status);
+          const data = await response.json();
+          if (data.status !== "ok" || !Array.isArray(data.items)) throw new Error(data.message || "RSS feed could not be read.");
+          episodes = data.items.filter(item => /^armchair anonymous\s*:/i.test((item.title || "").trim()));
+        } catch (fallbackError) {
+          throw new Error(sourceError + "; RSS fallback: " + (fallbackError.message || "unavailable"));
+        }
+      }
       list.innerHTML = "";
       if (!episodes.length) { list.innerHTML = '<p class="muted">No Armchair Anonymous episodes were found in the feed right now.</p>'; status.textContent = "Feed loaded, but no matching episodes were found."; return; }
       episodes.forEach(episode => {
