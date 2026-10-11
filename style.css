@@ -124,3 +124,35 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 /* Delta- runs directly inside its LunaOS window. */
 .delta-content { display: block; padding: 0; overflow: hidden; }
 .delta-frame { display: block; width: 100%; height: 100%; min-height: 0; border: 0; background: #fff; }
+
+
+/* Ensure the Delta- website fills the LunaOS app window. */
+.app-window:has(.delta-frame) {
+  width: min(1100px, 90%);
+  height: min(760px, 88%);
+}
+.delta-content {
+  display: flex !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 !important;
+  overflow: hidden;
+}
+.delta-frame {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  background: #17191f;
+}
+@media (max-width: 650px) {
+  .app-window:has(.delta-frame) {
+    top: 2%;
+    left: 2%;
+    width: 96%;
+    height: 94%;
+  }
+}
