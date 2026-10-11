@@ -528,19 +528,13 @@ function makeDraggable(win) {
   bar.addEventListener("pointercancel", stop);
 }
 
+// Desktop and home app launchers get direct click handlers so they remain reliable.
+$("#openDelta")?.addEventListener("click", openDelta);
+$("#deltaIcon")?.addEventListener("click", openDelta);
+$("#home")?.addEventListener("click", openDelta);
+$("#podcastIcon")?.addEventListener("click", openPodcast);
+
 document.addEventListener("click", event => {
-  if (event.target.closest("#2048Icon")) {
-    open2048();
-    return;
-  }
-  if (event.target.closest("#podcastIcon")) {
-    openPodcast();
-    return;
-  }
-  if (event.target.closest("#openDelta, #deltaIcon, #home")) {
-    openDelta();
-    return;
-  }
   const close = event.target.closest("[data-close]");
   if (close) {
     closeApp(close.closest(".app-window").dataset.window);
@@ -775,6 +769,7 @@ puzzleShortcut.className = "desktop-icon";
 puzzleShortcut.id = "2048Icon";
 puzzleShortcut.setAttribute("aria-label", "Open 2048");
 puzzleShortcut.innerHTML = '<span class="icon game2048-icon" aria-hidden="true">2048</span><span>2048</span>';
+puzzleShortcut.addEventListener("click", open2048);
 $(".icons").appendChild(puzzleShortcut);
 
 restoreOpenWindows();
