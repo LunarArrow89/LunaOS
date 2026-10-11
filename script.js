@@ -76,10 +76,10 @@ function openPodcast() {
       </div>
       <section class="armchair-section" aria-labelledby="armchairHeading">
         <div class="armchair-heading"><div><p class="podcast-kicker">FROM THE OFFICIAL PODCAST FEED</p><h3 id="armchairHeading">Armchair Anonymous</h3></div><button type="button" class="armchair-refresh" id="armchairRefresh">↻ Refresh</button></div>
-        <p class="armchair-description">Browse the official Armchair Expert website directly here. Open the site in a new tab if its player or page does not load inside LunaOS.</p>
-        <p class="podcast-status" id="armchairStatus" role="status">Opening the official Armchair Expert website…</p>
-        <iframe id="armchairEpisodeList" class="armchair-site-frame" title="Official Armchair Expert episodes" src="https://armchairexpertpod.com/pods"></iframe>
-        <a class="armchair-episode-link armchair-open-site" href="https://armchairexpertpod.com/armchair-anonymous-show" target="_blank" rel="noopener noreferrer">Open Armchair Anonymous ↗</a>
+        <p class="armchair-description">Browse Armchair Anonymous in your own LunaOS player. Audio streams from the official podcast feed.</p>
+        <p class="podcast-status" id="armchairStatus" role="status">Loading episode audio…</p>
+        <div id="armchairEpisodeList" class="armchair-episode-list"><p class="muted">Loading Armchair Anonymous episodes…</p></div>
+        <a class="armchair-episode-link armchair-open-site" href="https://armchairexpertpod.com/armchair-anonymous-show" target="_blank" rel="noopener noreferrer">Official show page ↗</a>
       </section>
       <label class="podcast-upload" for="podcastFiles">＋ Add episode audio files</label>
       <input id="podcastFiles" class="podcast-file-input" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac,.flac" multiple>
