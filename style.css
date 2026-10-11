@@ -156,3 +156,20 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
     height: 94%;
   }
 }
+
+
+/* Delta- opens maximized inside the LunaOS desktop, with a restore button. */
+.app-window:has(.delta-frame).is-maximized {
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.app-window:has(.delta-frame) .window-title button[data-maximize] {
+  font-size: 15px;
+}
