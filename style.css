@@ -461,3 +461,46 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .window-title .sound-wave-icon i:nth-child(3),
 .window-title .sound-wave-icon i:nth-child(5) { height: 17px; }
 .window-title .sound-wave-icon i:nth-child(4) { height: 10px; }
+
+
+/* LunaOS 2048 puzzle app */
+.game2048-icon {
+  display: grid;
+  place-items: center;
+  background: #eddfc9;
+  color: #77634c;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+.game2048-window { width: min(520px, 92%); height: min(690px, 92%); }
+.game2048-content { background: #faf6ed; color: #776e62; padding: 17px !important; overflow-y: auto; }
+.game2048-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.game2048-top h2 { margin: 0; color: #77634c; font-family: Arial, sans-serif; font-size: 36px; font-weight: 800; }
+.game2048-eyebrow { margin: 0 0 3px !important; font-size: 9px !important; letter-spacing: 1.2px; }
+.game2048-scores { display: flex; gap: 7px; }
+.game2048-scores > div { min-width: 62px; padding: 7px 9px; border-radius: 8px; background: #e7ddce; text-align: center; }
+.game2048-scores small { display: block; font-size: 8px; letter-spacing: 1px; }
+.game2048-scores strong { display: block; color: #625444; font-size: 17px; }
+.game2048-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 13px 0 10px; font-size: 11px; }
+.game2048-actions button { padding: 9px 12px; border: 0; border-radius: 8px; background: #8c9d7b; color: white; font-size: 11px; font-weight: bold; white-space: nowrap; }
+.game2048-actions button:hover { background: #758866; }
+.game2048-board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: min(100%, 430px); aspect-ratio: 1; margin: 0 auto; padding: 8px; border-radius: 12px; background: #cbbda8; outline-offset: 3px; touch-action: none; user-select: none; }
+.game2048-tile { display: grid; place-items: center; min-width: 0; border-radius: 7px; background: #eee7dc; color: #665b4d; font-size: clamp(18px, 5vw, 31px); font-weight: 800; }
+.game2048-tile.tile-empty { background: rgba(246, 239, 228, .55); }
+.game2048-tile.tile-2 { background: #f4eee4; }
+.game2048-tile.tile-4 { background: #eee0c8; }
+.game2048-tile.tile-8 { background: #e9b984; color: white; }
+.game2048-tile.tile-16 { background: #e99d6b; color: white; }
+.game2048-tile.tile-32 { background: #e77f61; color: white; }
+.game2048-tile.tile-64 { background: #dc624a; color: white; }
+.game2048-tile.tile-128, .game2048-tile.tile-256 { background: #c6b76f; color: white; font-size: clamp(16px, 4vw, 26px); }
+.game2048-tile.tile-512, .game2048-tile.tile-1024, .game2048-tile.tile-2048 { background: #8b9c78; color: white; font-size: clamp(14px, 3.7vw, 24px); }
+.game2048-help { margin: 12px 0 0 !important; font-size: 11px !important; text-align: center; }
+.game2048-message { min-height: 18px; margin: 5px 0 0 !important; color: #758866 !important; font-size: 11px !important; font-weight: bold; text-align: center; }
+@media (max-width: 650px) {
+  .game2048-window { top: 3%; left: 3%; width: 94%; height: 92%; }
+  .game2048-content { padding: 12px !important; }
+  .game2048-board { gap: 6px; padding: 6px; }
+  .game2048-actions { align-items: flex-start; font-size: 10px; }
+}
