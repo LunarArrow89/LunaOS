@@ -257,6 +257,7 @@ async function setupArmchairAnonymous(win, player, setStatus) {
             itunes: { duration: Number.isFinite(item.trackTimeMillis) ? Math.round(item.trackTimeMillis / 1000) : "" },
             link: item.trackViewUrl || ""
           }));
+        if (!episodes.length) throw new Error("No matching episodes in catalogue response.");
       } catch (error) {
         sourceError = error.message || "Podcast catalogue unavailable";
         try {
