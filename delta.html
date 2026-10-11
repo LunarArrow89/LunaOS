@@ -1916,16 +1916,28 @@ addFileButton.addEventListener("click", () => {
   });
   document.getElementById("insertObjectCode").addEventListener("click", () => {
     const item = selected();
-    if (!item) { status.textContent = "Add or select a text object first."; return; }
+    if (!item) {
+      status.textContent = "Add or select a text object first.";
+      return;
+    }
     const code = objectCode(item);
-    const start = editor.selectionStart;
-    const end = editor.selectionEnd;
+    // A click on this button may blur the editor. If it was not focused,
+    // append to the end instead of inserting at a stale caret position.
+    const editorHadFocus = document.activeElement === editor;
+    const start = editorHadFocus ? editor.selectionStart : editor.value.length;
+    const end = editorHadFocus ? editor.selectionEnd : editor.value.length;
     const before = editor.value.slice(0, start);
-    const needsNewline = before.length > 0 && !before.endsWith("\n");
-    editor.setRangeText((needsNewline ? "\n" : "") + code + "\n", start, end, "end");
-    editor.dispatchEvent(new Event("input", { bubbles: true }));
+    const after = editor.value.slice(end);
+    const prefix = before.length > 0 && !before.endsWith("\n") ? "\n" : "";
+    const suffix = after.length > 0 && !after.startsWith("\n") ? "\n" : "";
+    const insertion = prefix + code + (suffix || "\n");
     editor.focus();
-    status.textContent = "Inserted: " + code;
+    editor.setRangeText(insertion, start, end, "end");
+    editor.dispatchEvent(new Event("input", { bubbles: true }));
+    updateEditorInfo();
+    saveActiveFile();
+    saveCurrentProject();
+    status.textContent = "Code inserted into " + (activeFileName || "the editor") + ".";
   });
   map.addEventListener("pointermove", event => {
     if (!drag || (drag.pointerId != null && event.pointerId !== drag.pointerId)) return;
