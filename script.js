@@ -31,7 +31,7 @@ function openDelta() {
   win.style.zIndex = ++state.zIndex;
   win.innerHTML = `
     <div class="window-title">
-      <span class="mini-glyph">◇</span><strong>Delta-</strong>
+      <span class="mini-glyph">◆</span><strong>Delta-</strong>
       <button data-maximize title="Restore window" aria-label="Restore window">❐</button>
       <button data-minimize title="Minimize" aria-label="Minimize">−</button>
       <button class="close" data-close title="Close" aria-label="Close">×</button>
@@ -41,7 +41,7 @@ function openDelta() {
     </div>`;
 
   $("#windows").appendChild(win);
-  state.windows.set("delta", { element: win, title: "Delta-" });
+  state.windows.set("delta", { element: win, title: "Delta-", glyph: "◆" });
   makeDraggable(win);
   makeResizable(win);
   win.addEventListener("pointerdown", () => focusWindow(win));
@@ -76,7 +76,7 @@ function openPodcast() {
       <div id="podcastEpisodeList" class="podcast-episode-list"><p class="muted">Loading uploaded audio…</p></div>
     </div>`;
   $("#windows").appendChild(win);
-  state.windows.set("podcast", { element: win, title: "Podcast Episodes", glyph: "〽" });
+  state.windows.set("podcast", { element: win, title: "Podcast Episodes", glyph: "♫" });
   makeDraggable(win);
   makeResizable(win);
   win.addEventListener("pointerdown", () => focusWindow(win));
