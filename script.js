@@ -60,6 +60,7 @@ function open2048() {
 
   const win = document.createElement("section");
   win.className = "app-window game2048-window";
+  win.tabIndex = -1;
   win.dataset.window = "2048";
   win.style.zIndex = ++state.zIndex;
   win.innerHTML = `
@@ -185,6 +186,7 @@ function setup2048(win) {
   });
   $("[data-new-game]", win).addEventListener("click", reset);
   let touchStart = null;
+  boardElement.addEventListener("click", () => boardElement.focus());
   boardElement.addEventListener("touchstart", event => {
     const touch = event.changedTouches[0];
     touchStart = { x: touch.clientX, y: touch.clientY };
