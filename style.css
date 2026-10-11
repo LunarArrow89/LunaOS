@@ -504,3 +504,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   .game2048-board { gap: 6px; padding: 6px; }
   .game2048-actions { align-items: flex-start; font-size: 10px; }
 }
+
+/* Keep the 2048 desktop shortcut compact like a small app badge. */
+.icons .game2048-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  font-size: 10px;
+  letter-spacing: -0.5px;
+  box-shadow: none;
+}
