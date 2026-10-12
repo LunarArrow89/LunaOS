@@ -14,6 +14,7 @@ function openBrowser() {
     '<form data-browser-home-form class="browser-home-form"><input data-browser-home-address aria-label="Search the web" placeholder="Search the web..."><button type="submit">Search ↗</button></form>',
     '<p class="browser-hint">Enter a website address or search the web.</p><div data-luna-results class="luna-results" aria-live="polite"></div></div>',
     '<iframe class="browser-frame" data-browser-frame title="Luna Browser webpage" hidden></iframe>',
+    '<webview class="browser-frame" data-browser-webview title="Luna Browser webpage" allowpopups></webview>',
     '<div class="browser-blocked" data-browser-blocked hidden><div class="browser-blocked-mark">↗</div><h2>This site cannot open inside LunaOS.</h2><p>The website blocks being displayed inside another website. Open it in a regular browser tab to use it.</p><button type="button" data-browser-open-external>Open website in a new tab ↗</button></div></div>'
   ].join("");
   $("#windows").appendChild(win);
@@ -22,6 +23,11 @@ function openBrowser() {
   const address = $("[data-browser-address]",win);
   const homeAddress = $("[data-browser-home-address]",win);
   const frame = $("[data-browser-frame]",win);
+  const desktopBrowser = window.lunaDesktop || null;
+  const webview = $("[data-browser-webview]",win);
+  const useDesktopBrowser = Boolean(desktopBrowser && webview);
+  if (webview) webview.style.display = "none";
+  if (useDesktopBrowser) frame.style.display = "none";
   const home = $("[data-browser-home]",win);
   const blocked = $("[data-browser-blocked]",win);
   const results = $("[data-luna-results]",win);
@@ -108,17 +114,28 @@ function openBrowser() {
     currentUrl = url; address.value = url; homeAddress.value = url;
     home.hidden = true;
     const isBlockedKnown = host === "chatgpt.com" || host.endsWith(".chatgpt.com") || host === "startpage.com" || host.endsWith(".startpage.com") || host === "duckduckgo.com" || host.endsWith(".duckduckgo.com") || host === "google.com" || host.endsWith(".google.com") || host === "bing.com" || host.endsWith(".bing.com");
-    blocked.hidden = !isBlockedKnown; frame.hidden = isBlockedKnown;
-    if (!isBlockedKnown) frame.src = url;
+    if (useDesktopBrowser) {
+      blocked.hidden = true;
+      frame.style.display = "none";
+      frame.hidden = true;
+      webview.hidden = false;
+      webview.style.display = "block";
+      if (webview.getAttribute("src") !== url) webview.setAttribute("src", url);
+    } else {
+      blocked.hidden = !isBlockedKnown;
+      frame.hidden = isBlockedKnown;
+      frame.style.display = isBlockedKnown ? "none" : "block";
+      if (!isBlockedKnown) frame.src = url;
+    }
     addHistory(raw, record);
   }
   $("[data-browser-form]",win).addEventListener("submit",e=>{e.preventDefault();navigate(address.value);});
   $("[data-browser-home-form]",win).addEventListener("submit",e=>{e.preventDefault();searchLuna(homeAddress.value);addHistory(homeAddress.value,true);});
   back.disabled = true; forward.disabled = true;
-  back.addEventListener("click",()=>{if(historyIndex>0){historyIndex--;navigate(history[historyIndex],false);back.disabled=historyIndex<=0;forward.disabled=historyIndex>=history.length-1;}});
-  forward.addEventListener("click",()=>{if(historyIndex<history.length-1){historyIndex++;navigate(history[historyIndex],false);back.disabled=historyIndex<=0;forward.disabled=historyIndex>=history.length-1;}});
-  $("[data-browser-refresh]",win).addEventListener("click",()=>{if(currentUrl){frame.src=currentUrl;}else if(lastSearch){searchLuna(lastSearch);}else{home.hidden=false;frame.hidden=true;blocked.hidden=true;}});
-  const external=()=>{if(currentUrl) window.open(currentUrl,"_blank","noopener,noreferrer"); else if(lastSearch) window.open("https://www.startpage.com/do/dsearch?q="+encodeURIComponent(lastSearch)+"&cat=web&language=english","_blank","noopener,noreferrer");};
+  back.addEventListener("click",()=>{if(useDesktopBrowser && webview.canGoBack()){webview.goBack();return;}if(historyIndex>0){historyIndex--;navigate(history[historyIndex],false);back.disabled=historyIndex<=0;forward.disabled=historyIndex>=history.length-1;}});
+  forward.addEventListener("click",()=>{if(useDesktopBrowser && webview.canGoForward()){webview.goForward();return;}if(historyIndex<history.length-1){historyIndex++;navigate(history[historyIndex],false);back.disabled=historyIndex<=0;forward.disabled=historyIndex>=history.length-1;}});
+  $("[data-browser-refresh]",win).addEventListener("click",()=>{if(currentUrl){if(useDesktopBrowser)webview.reload();else frame.src=currentUrl;}else if(lastSearch){searchLuna(lastSearch);}else{home.hidden=false;frame.hidden=true;frame.style.display="none";if(webview)webview.style.display="none";blocked.hidden=true;}});
+  const external=()=>{const target=currentUrl || (lastSearch ? "https://www.startpage.com/do/dsearch?q="+encodeURIComponent(lastSearch)+"&cat=web&language=english" : "");if(!target)return;if(desktopBrowser && typeof desktopBrowser.openExternal==="function")desktopBrowser.openExternal(target);else window.open(target,"_blank","noopener,noreferrer");};
   $("[data-browser-new-tab]",win).addEventListener("click",external);
   $("[data-browser-open-external]",win).addEventListener("click",external);
   updateDock();
