@@ -161,38 +161,9 @@ function openDelta() {
 
 
 function openChatGPT() {
-  const existing = state.windows.get("chatgpt");
-  if (existing) {
-    existing.element.style.display = "flex";
-    focusWindow(existing.element);
-    updateDock();
-    return;
-  }
-
-  const win = document.createElement("section");
-  win.className = "app-window chatgpt-window";
-  win.dataset.window = "chatgpt";
-  win.style.zIndex = ++state.zIndex;
-  win.innerHTML = `
-    <div class="window-title">
-      <span class="mini-glyph" aria-hidden="true">✳</span><strong>ChatGPT</strong>
-      <button data-minimize title="Minimize" aria-label="Minimize">−</button>
-      <button class="close" data-close title="Close" aria-label="Close">×</button>
-    </div>
-    <div class="window-content chatgpt-content chatgpt-embedded-content">
-      <div class="chatgpt-embed-fallback">
-        <span>If ChatGPT doesn't load below, it may block embedded windows.</span>
-        <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Open ChatGPT in a new tab ↗</a>
-      </div>
-      <iframe class="chatgpt-iframe" src="https://chatgpt.com/" title="ChatGPT website"
-        allow="clipboard-read; clipboard-write; microphone; camera; geolocation" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-    </div>`;
-  $("#windows").appendChild(win);
-  state.windows.set("chatgpt", { element: win, title: "ChatGPT", glyph: "✳" });
-  makeDraggable(win);
-  makeResizable(win);
-  win.addEventListener("pointerdown", () => focusWindow(win));
-  updateDock();
+  // ChatGPT blocks iframe embedding, so launch the real site directly.
+  // This function is called by the user's click on the ChatGPT desktop icon.
+  window.open("https://chatgpt.com/", "_blank", "noopener,noreferrer");
 }
 
 function open2048() {
@@ -943,11 +914,10 @@ function restoreOpenWindows() {
     saved = [];
   }
   saved.forEach(item => {
-    if (!item || !["delta", "podcast", "2048", "chatgpt", "browser"].includes(item.app)) return;
+    if (!item || !["delta", "podcast", "2048", "browser"].includes(item.app)) return;
     if (item.app === "delta") openDelta();
     if (item.app === "podcast") openPodcast();
     if (item.app === "2048") open2048();
-    if (item.app === "chatgpt") openChatGPT();
     if (item.app === "browser") openBrowser();
     const record = state.windows.get(item.app);
     if (!record) return;
