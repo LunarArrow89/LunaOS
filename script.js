@@ -179,14 +179,13 @@ function openChatGPT() {
       <button data-minimize title="Minimize" aria-label="Minimize">−</button>
       <button class="close" data-close title="Close" aria-label="Close">×</button>
     </div>
-    <div class="window-content chatgpt-content">
-      <div class="chatgpt-welcome">
-        <div class="chatgpt-mark" aria-hidden="true">✳</div>
-        <h2>ChatGPT</h2>
-        <p>Ask questions, brainstorm, write, learn, and build things.</p>
-        <a class="chatgpt-open-button" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Open ChatGPT ↗</a>
-        <p class="chatgpt-note">ChatGPT opens in a new tab so sign-in and chat features work properly.</p>
+    <div class="window-content chatgpt-content chatgpt-embedded-content">
+      <div class="chatgpt-embed-fallback">
+        <span>If ChatGPT doesn't load below, it may block embedded windows.</span>
+        <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Open ChatGPT in a new tab ↗</a>
       </div>
+      <iframe class="chatgpt-iframe" src="https://chatgpt.com/" title="ChatGPT website"
+        allow="clipboard-read; clipboard-write; microphone; camera; geolocation" referrerpolicy="strict-origin-when-cross-origin"></iframe>
     </div>`;
   $("#windows").appendChild(win);
   state.windows.set("chatgpt", { element: win, title: "ChatGPT", glyph: "✳" });
