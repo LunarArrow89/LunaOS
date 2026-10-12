@@ -18,7 +18,7 @@ function openBrowser() {
   const history = []; let historyIndex = -1, currentUrl = "";
   function navigate(value, record = true) {
     const raw = value.trim(); if (!raw) return;
-    let url; if (/^https?:\\/\\//i.test(raw)) url = raw; else if (/^[\\w.-]+\\.[a-z]{2,}([/:?#].*)?$/i.test(raw)) url = "https://" + raw; else url = "https://www.google.com/search?q=" + encodeURIComponent(raw);
+    let url; if (raw.toLowerCase().startsWith("https://") || raw.toLowerCase().startsWith("http://")) url = raw; else if (raw.includes(".") && !/\s/.test(raw)) url = "https://" + raw; else url = "https://www.google.com/search?q=" + encodeURIComponent(raw);
     currentUrl=url; address.value=url; homeAddress.value=url; home.hidden=true;
     const host = new URL(url).hostname.toLowerCase(), isChatGPT = host === "chatgpt.com" || host.endsWith(".chatgpt.com");
     blocked.hidden=!isChatGPT; frame.hidden=isChatGPT; frame.src=url;
