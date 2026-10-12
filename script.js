@@ -1,4 +1,26 @@
+
 const $ = (selector, root = document) => root.querySelector(selector);
+
+// Simple front-end password gate. This is a convenience screen, not secure authentication.
+function setupPasswordGate() {
+  const gate = $("#passwordGate");
+  const form = $("#passwordForm");
+  const input = $("#osPassword");
+  const error = $("#passwordError");
+  if (!gate || !form || !input || !error) return;
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    if (input.value === "2697") {
+      gate.remove();
+      document.body.classList.add("os-unlocked");
+    } else {
+      error.textContent = "That password isn't correct. Try again.";
+      input.value = "";
+      input.focus();
+    }
+  });
+}
+setupPasswordGate();
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const DELTA_URL = "./delta.html";
 const RAIN_URL = "https://www.rainymood.com/";
