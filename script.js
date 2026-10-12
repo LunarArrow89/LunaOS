@@ -14,18 +14,25 @@ function setupPasswordGate() {
   const MAX_ATTEMPTS = 5;
   const LOCKOUT_MS = 2 * 60 * 1000;
   const LOCKOUT_KEY = "lunaos-password-locked-until";
+  const ATTEMPTS_KEY = "lunaos-password-attempts";
   let attempts = 0;
   let lockedUntil = 0;
   let lockoutInterval = null;
 
   try {
+    attempts = Math.min(MAX_ATTEMPTS, Math.max(0, Number(localStorage.getItem(ATTEMPTS_KEY)) || 0));
     lockedUntil = Number(localStorage.getItem(LOCKOUT_KEY)) || 0;
     if (lockedUntil <= Date.now()) {
       lockedUntil = 0;
       localStorage.removeItem(LOCKOUT_KEY);
+      if (attempts >= MAX_ATTEMPTS) attempts = 0;
+      localStorage.setItem(ATTEMPTS_KEY, String(attempts));
+    } else {
+      attempts = MAX_ATTEMPTS;
     }
   } catch (storageError) {
     lockedUntil = 0;
+    attempts = 0;
   }
 
   function setLocked(locked) {
@@ -40,7 +47,10 @@ function setupPasswordGate() {
     if (remaining <= 0) {
       lockedUntil = 0;
       attempts = 0;
-      try { localStorage.removeItem(LOCKOUT_KEY); } catch (storageError) {}
+      try {
+        localStorage.removeItem(LOCKOUT_KEY);
+        localStorage.removeItem(ATTEMPTS_KEY);
+      } catch (storageError) {}
       if (lockoutInterval !== null) {
         clearInterval(lockoutInterval);
         lockoutInterval = null;
@@ -76,7 +86,10 @@ function setupPasswordGate() {
     }
     if (input.value === "2697") {
       if (lockoutInterval !== null) clearInterval(lockoutInterval);
-      try { localStorage.removeItem(LOCKOUT_KEY); } catch (storageError) {}
+      try {
+        localStorage.removeItem(LOCKOUT_KEY);
+        localStorage.removeItem(ATTEMPTS_KEY);
+      } catch (storageError) {}
       gate.remove();
       document.body.classList.add("os-unlocked");
       return;
@@ -84,13 +97,14 @@ function setupPasswordGate() {
 
     attempts += 1;
     input.value = "";
+    try { localStorage.setItem(ATTEMPTS_KEY, String(attempts)); } catch (storageError) {}
     if (attempts >= MAX_ATTEMPTS) {
       lockedUntil = Date.now() + LOCKOUT_MS;
       try { localStorage.setItem(LOCKOUT_KEY, String(lockedUntil)); } catch (storageError) {}
       startLockoutCountdown();
       return;
     }
-    error.textContent = "That password isn't correct. Try again. (" + attempts + "/" + MAX_ATTEMPTS + " attempts)";
+    error.textContent = "That password isn't correct. " + (MAX_ATTEMPTS - attempts) + " attempt" + (MAX_ATTEMPTS - attempts === 1 ? "" : "s") + " left.";
     error.style.color = "#b34e4e";
     input.focus();
   });
