@@ -524,6 +524,42 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   font-size: 30px;
 }
 .chatgpt-window { width: min(520px, 76%); height: min(420px, 78%); }
+.chatgpt-embedded-content {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  background: #fff;
+}
+.chatgpt-iframe {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  background: #fff;
+}
+.chatgpt-embed-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  color: #6d756a;
+  background: #f4f3ec;
+  border-bottom: 1px solid #e1e4da;
+  font-size: 11px;
+}
+.chatgpt-embed-fallback a {
+  flex: 0 0 auto;
+  color: #405b4c;
+  font-weight: 700;
+  text-decoration: none;
+}
+.chatgpt-embed-fallback a:hover { text-decoration: underline; }
 .chatgpt-content {
   display: grid;
   place-items: center;
