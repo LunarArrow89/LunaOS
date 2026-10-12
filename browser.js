@@ -12,7 +12,7 @@ function openBrowser() {
     '<div class="browser-page-wrap">',
     '<div class="browser-home" data-browser-home><div class="browser-home-mark">☾</div><p class="browser-kicker">LUNA SEARCH</p><h2>What are we looking for?</h2>',
     '<form data-browser-home-form class="browser-home-form"><input data-browser-home-address aria-label="Search the web" placeholder="Search the web..."><button type="submit">Search ↗</button></form>',
-    '<p class="browser-hint">Luna Search shows matching Wikipedia articles here. Use the web-search links for full internet results.</p><div data-luna-results class="luna-results" aria-live="polite"></div></div>',
+    '<p class="browser-hint">Enter a website address or search the web.</p><div data-luna-results class="luna-results" aria-live="polite"></div></div>',
     '<iframe class="browser-frame" data-browser-frame title="Luna Browser webpage" hidden></iframe>',
     '<div class="browser-blocked" data-browser-blocked hidden><div class="browser-blocked-mark">↗</div><h2>This site needs its own tab.</h2><p>This website blocks embedded viewing. You can still open it normally in a new tab.</p><button type="button" data-browser-open-external>Open this website in a new tab ↗</button></div></div>'
   ].join("");
@@ -85,37 +85,12 @@ function openBrowser() {
     links.append(startpage, duck);
     results.appendChild(links);
   }
-  async function searchLuna(query) {
+  function searchLuna(query) {
     const q = String(query || "").trim();
     if (!q) return;
     lastSearch = q;
-    currentUrl = "";
-    address.value = q;
-    homeAddress.value = q;
-    home.hidden = false;
-    frame.hidden = true;
-    blocked.hidden = true;
-    showResultsMessage("Searching articles...");
-    try {
-      const endpoint = "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=" +
-        encodeURIComponent(q) + "&format=json&origin=*&srlimit=8&srprop=snippet";
-      const response = await fetch(endpoint);
-      if (!response.ok) throw new Error("Search service unavailable");
-      const data = await response.json();
-      results.replaceChildren();
-      const hits = data && data.query && Array.isArray(data.query.search) ? data.query.search : [];
-      for (const hit of hits) {
-        const cleanSnippet = document.createElement("div");
-        cleanSnippet.innerHTML = hit.snippet || "";
-        const description = (cleanSnippet.textContent || "").replace(/\s+/g, " ").trim();
-        addSearchResult(hit.title, description, "https://en.wikipedia.org/wiki/" + encodeURIComponent(hit.title.replace(/ /g, "_")));
-      }
-      if (!hits.length) showResultsMessage("No Wikipedia articles matched that search. You can still open full web results below.");
-      addWebSearchLinks(q);
-    } catch (error) {
-      showResultsMessage("Luna Search couldn't reach its article service. You can still open full web results below.");
-      addWebSearchLinks(q);
-    }
+    const searchUrl = "https://duckduckgo.com/?q=" + encodeURIComponent(q);
+    navigate(searchUrl);
   }
   function navigate(value, record = true) {
     const raw = String(value || "").trim();
