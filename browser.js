@@ -14,7 +14,7 @@ function openBrowser() {
     '<form data-browser-home-form class="browser-home-form"><input data-browser-home-address aria-label="Search the web" placeholder="Search the web..."><button type="submit">Search ↗</button></form>',
     '<p class="browser-hint">Enter a website address or search the web.</p><div data-luna-results class="luna-results" aria-live="polite"></div></div>',
     '<iframe class="browser-frame" data-browser-frame title="Luna Browser webpage" hidden></iframe>',
-    '<div class="browser-blocked" data-browser-blocked hidden><div class="browser-blocked-mark">↗</div><h2>This site needs its own tab.</h2><p>This website blocks embedded viewing. You can still open it normally in a new tab.</p><button type="button" data-browser-open-external>Open this website in a new tab ↗</button></div></div>'
+    '<div class="browser-blocked" data-browser-blocked hidden><div class="browser-blocked-mark">↗</div><h2>This site cannot open inside LunaOS.</h2><p>The website blocks being displayed inside another website. Open it in a regular browser tab to use it.</p><button type="button" data-browser-open-external>Open website in a new tab ↗</button></div></div>'
   ].join("");
   $("#windows").appendChild(win);
   state.windows.set("browser", {element:win,title:"Luna Browser",glyph:"☾"});
@@ -107,7 +107,7 @@ function openBrowser() {
     try { host = new URL(url).hostname.toLowerCase(); } catch (_) { showResultsMessage("That address doesn't look valid."); home.hidden = false; return; }
     currentUrl = url; address.value = url; homeAddress.value = url;
     home.hidden = true;
-    const isBlockedKnown = host === "chatgpt.com" || host.endsWith(".chatgpt.com") || host === "startpage.com" || host.endsWith(".startpage.com");
+    const isBlockedKnown = host === "chatgpt.com" || host.endsWith(".chatgpt.com") || host === "startpage.com" || host.endsWith(".startpage.com") || host === "duckduckgo.com" || host.endsWith(".duckduckgo.com") || host === "google.com" || host.endsWith(".google.com") || host === "bing.com" || host.endsWith(".bing.com");
     blocked.hidden = !isBlockedKnown; frame.hidden = isBlockedKnown;
     if (!isBlockedKnown) frame.src = url;
     addHistory(raw, record);
