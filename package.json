@@ -1,0 +1,38 @@
+{
+  "name": "lunaos-desktop",
+  "version": "1.0.0",
+  "description": "LunaOS desktop app with an embedded Chromium browser",
+  "main": "desktop/main.cjs",
+  "author": "LunarArrow89",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.lunaarrow89.lunaos",
+    "productName": "LunaOS",
+    "directories": { "output": "dist" },
+    "files": [
+      "index.html",
+      "browser.js",
+      "script.js",
+      "style.css",
+      "rain.mp3",
+      "desktop/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "linux": {
+      "target": ["deb", "AppImage"],
+      "category": "Utility",
+      "maintainer": "LunarArrow89"
+    },
+    "win": { "target": ["nsis"] },
+    "mac": { "target": ["dmg"] }
+  }
+}
