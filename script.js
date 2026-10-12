@@ -49,6 +49,42 @@ function openDelta() {
 }
 
 
+function openChatGPT() {
+  const existing = state.windows.get("chatgpt");
+  if (existing) {
+    existing.element.style.display = "flex";
+    focusWindow(existing.element);
+    updateDock();
+    return;
+  }
+
+  const win = document.createElement("section");
+  win.className = "app-window chatgpt-window";
+  win.dataset.window = "chatgpt";
+  win.style.zIndex = ++state.zIndex;
+  win.innerHTML = `
+    <div class="window-title">
+      <span class="mini-glyph" aria-hidden="true">✳</span><strong>ChatGPT</strong>
+      <button data-minimize title="Minimize" aria-label="Minimize">−</button>
+      <button class="close" data-close title="Close" aria-label="Close">×</button>
+    </div>
+    <div class="window-content chatgpt-content">
+      <div class="chatgpt-welcome">
+        <div class="chatgpt-mark" aria-hidden="true">✳</div>
+        <h2>ChatGPT</h2>
+        <p>Ask questions, brainstorm, write, learn, and build things.</p>
+        <a class="chatgpt-open-button" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Open ChatGPT ↗</a>
+        <p class="chatgpt-note">ChatGPT opens in a new tab so sign-in and chat features work properly.</p>
+      </div>
+    </div>`;
+  $("#windows").appendChild(win);
+  state.windows.set("chatgpt", { element: win, title: "ChatGPT", glyph: "✳" });
+  makeDraggable(win);
+  makeResizable(win);
+  win.addEventListener("pointerdown", () => focusWindow(win));
+  updateDock();
+}
+
 function open2048() {
   const existing = state.windows.get("2048");
   if (existing) {
@@ -569,7 +605,7 @@ function makeDraggable(win) {
 $("#openDelta")?.addEventListener("click", openDelta);
 $("#deltaIcon")?.addEventListener("click", openDelta);
 $("#home")?.addEventListener("click", openDelta);
-$("#podcastIcon")?.addEventListener("click", openPodcast);
+$("#podcastIcon")?.addEventListener("click", openPodcast);\n$("#chatgptIcon")?.addEventListener("click", openChatGPT);
 
 document.addEventListener("click", event => {
   const close = event.target.closest("[data-close]");
@@ -796,10 +832,10 @@ function restoreOpenWindows() {
     saved = [];
   }
   saved.forEach(item => {
-    if (!item || !["delta", "podcast", "2048"].includes(item.app)) return;
+    if (!item || !["delta", "podcast", "2048", "chatgpt"].includes(item.app)) return;
     if (item.app === "delta") openDelta();
     if (item.app === "podcast") openPodcast();
-    if (item.app === "2048") open2048();
+    if (item.app === "2048") open2048();\n    if (item.app === "chatgpt") openChatGPT();
     const record = state.windows.get(item.app);
     if (!record) return;
     const win = record.element;
