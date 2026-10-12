@@ -1,0 +1,49 @@
+name: Build LunaOS Desktop App
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "desktop/**"
+      - "package.json"
+      - "index.html"
+      - "browser.js"
+      - "script.js"
+      - "style.css"
+      - ".github/workflows/build-desktop.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: lunaos-linux
+          - os: windows-latest
+            artifact: lunaos-windows
+          - os: macos-latest
+            artifact: lunaos-macos
+    steps:
+      - name: Check out LunaOS
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm install
+      - name: Build app
+        run: npm run dist
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/*
+          if-no-files-found: error
