@@ -943,11 +943,12 @@ function restoreOpenWindows() {
     saved = [];
   }
   saved.forEach(item => {
-    if (!item || !["delta", "podcast", "2048", "chatgpt"].includes(item.app)) return;
+    if (!item || !["delta", "podcast", "2048", "chatgpt", "browser"].includes(item.app)) return;
     if (item.app === "delta") openDelta();
     if (item.app === "podcast") openPodcast();
     if (item.app === "2048") open2048();
     if (item.app === "chatgpt") openChatGPT();
+    if (item.app === "browser") openBrowser();
     const record = state.windows.get(item.app);
     if (!record) return;
     const win = record.element;
@@ -971,6 +972,15 @@ function restoreOpenWindows() {
   updateDock();
 }
 // Add the puzzle shortcut without changing the desktop's existing markup.
+const browserShortcut = document.createElement("button");
+browserShortcut.className = "desktop-icon";
+browserShortcut.id = "browserIcon";
+browserShortcut.setAttribute("aria-label", "Open Luna Browser");
+const browserGlyph = document.createElement("span"); browserGlyph.className = "icon luna-browser-icon"; browserGlyph.textContent = "◎"; browserGlyph.setAttribute("aria-hidden", "true");
+const browserLabel = document.createElement("span"); browserLabel.textContent = "Luna Browser";
+browserShortcut.append(browserGlyph, browserLabel);
+browserShortcut.addEventListener("click", openBrowser);
+$(".icons").appendChild(browserShortcut);
 const puzzleShortcut = document.createElement("button");
 puzzleShortcut.className = "desktop-icon";
 puzzleShortcut.id = "2048Icon";
