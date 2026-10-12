@@ -12,9 +12,9 @@ function openBrowser() {
     '<div class="browser-page-wrap">',
     '<div class="browser-home" data-browser-home><div class="browser-home-mark">☾</div><p class="browser-kicker">LUNA SEARCH</p><h2>What are we looking for?</h2>',
     '<form data-browser-home-form class="browser-home-form"><input data-browser-home-address aria-label="Search the web" placeholder="Search the web..."><button type="submit">Search ↗</button></form>',
-    '<p class="browser-hint">Search results are provided by DuckDuckGo Instant Answers. Open result links in a new tab.</p><div data-luna-results class="luna-results" aria-live="polite"></div></div>',
+    '<p class="browser-hint">Luna Search shows matching Wikipedia articles here. Use the web-search links for full internet results.</p><div data-luna-results class="luna-results" aria-live="polite"></div></div>',
     '<iframe class="browser-frame" data-browser-frame title="Luna Browser webpage" hidden></iframe>',
-    '<div class="browser-blocked" data-browser-blocked hidden><div class="browser-blocked-mark">↗</div><h2>This site needs its own tab.</h2><p>This website blocks embedded viewing. Open it in a regular browser tab instead.</p><button type="button" data-browser-open-external>Open this website in a new tab ↗</button></div></div>'
+    '<div class="browser-blocked" data-browser-blocked hidden><div class="browser-blocked-mark">↗</div><h2>This site needs its own tab.</h2><p>This website blocks embedded viewing. You can still open it normally in a new tab.</p><button type="button" data-browser-open-external>Open this website in a new tab ↗</button></div></div>'
   ].join("");
   $("#windows").appendChild(win);
   state.windows.set("browser", {element:win,title:"Luna Browser",glyph:"☾"});
@@ -55,50 +55,66 @@ function openBrowser() {
     card.append(link, desc);
     results.appendChild(card);
   }
-  function addTopics(items) {
-    if (!Array.isArray(items)) return;
-    for (const item of items) {
-      if (item.Text && item.FirstURL) addResult(item.Text.split(" - ")[0], item.Text, item.FirstURL);
-      if (Array.isArray(item.Topics)) addTopics(item.Topics);
-    }
+  function addSearchResult(title, description, url) {
+    if (!url || !/^https?:\/\//i.test(url)) return;
+    const card = document.createElement("article");
+    card.className = "luna-result";
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = title || url;
+    const desc = document.createElement("p");
+    desc.textContent = description || "";
+    card.append(link, desc);
+    results.appendChild(card);
+  }
+  function addWebSearchLinks(query) {
+    const links = document.createElement("div");
+    links.className = "luna-web-links";
+    const startpage = document.createElement("a");
+    startpage.href = "https://www.startpage.com/do/dsearch?q=" + encodeURIComponent(query) + "&cat=web&language=english";
+    startpage.target = "_blank";
+    startpage.rel = "noopener noreferrer";
+    startpage.textContent = "Full web results on Startpage ↗";
+    const duck = document.createElement("a");
+    duck.href = "https://duckduckgo.com/?q=" + encodeURIComponent(query);
+    duck.target = "_blank";
+    duck.rel = "noopener noreferrer";
+    duck.textContent = "Full web results on DuckDuckGo ↗";
+    links.append(startpage, duck);
+    results.appendChild(links);
   }
   async function searchLuna(query) {
-    const q = query.trim();
+    const q = String(query || "").trim();
     if (!q) return;
-    lastSearch = q; currentUrl = "";
-    address.value = q; homeAddress.value = q;
-    home.hidden = false; frame.hidden = true; blocked.hidden = true;
-    showResultsMessage("Searching...");
+    lastSearch = q;
+    currentUrl = "";
+    address.value = q;
+    homeAddress.value = q;
+    home.hidden = false;
+    frame.hidden = true;
+    blocked.hidden = true;
+    showResultsMessage("Searching articles...");
     try {
-      const endpoint = "https://api.duckduckgo.com/?q=" + encodeURIComponent(q) + "&format=json&no_html=1&skip_disambig=1";
+      const endpoint = "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=" +
+        encodeURIComponent(q) + "&format=json&origin=*&srlimit=8&srprop=snippet";
       const response = await fetch(endpoint);
       if (!response.ok) throw new Error("Search service unavailable");
       const data = await response.json();
       results.replaceChildren();
-      if (data.Heading && data.AbstractText) addResult(data.Heading, data.AbstractText, data.AbstractURL);
-      addTopics(data.RelatedTopics);
-      if (!results.children.length) {
-        showResultsMessage("No instant answers were found for this search. Try opening full DuckDuckGo results in a new tab.");
-        const link = document.createElement("a");
-        link.href = "https://duckduckgo.com/?q=" + encodeURIComponent(q);
-        link.target = "_blank"; link.rel = "noopener noreferrer";
-        link.textContent = "View full DuckDuckGo search results ↗";
-        results.appendChild(link);
-      } else {
-        const full = document.createElement("a");
-        full.href = "https://duckduckgo.com/?q=" + encodeURIComponent(q);
-        full.target = "_blank"; full.rel = "noopener noreferrer";
-        full.textContent = "See full web results on DuckDuckGo ↗";
-        full.className = "luna-full-results";
-        results.appendChild(full);
+      const hits = data && data.query && Array.isArray(data.query.search) ? data.query.search : [];
+      for (const hit of hits) {
+        const cleanSnippet = document.createElement("div");
+        cleanSnippet.innerHTML = hit.snippet || "";
+        const description = (cleanSnippet.textContent || "").replace(/\s+/g, " ").trim();
+        addSearchResult(hit.title, description, "https://en.wikipedia.org/wiki/" + encodeURIComponent(hit.title.replace(/ /g, "_")));
       }
+      if (!hits.length) showResultsMessage("No Wikipedia articles matched that search. You can still open full web results below.");
+      addWebSearchLinks(q);
     } catch (error) {
-      showResultsMessage("The search service couldn't be reached from this page. You can still search in DuckDuckGo in a new tab.");
-      const link = document.createElement("a");
-      link.href = "https://duckduckgo.com/?q=" + encodeURIComponent(q);
-      link.target = "_blank"; link.rel = "noopener noreferrer";
-      link.textContent = "Search DuckDuckGo in a new tab ↗";
-      results.appendChild(link);
+      showResultsMessage("Luna Search couldn't reach its article service. You can still open full web results below.");
+      addWebSearchLinks(q);
     }
   }
   function navigate(value, record = true) {
@@ -116,9 +132,9 @@ function openBrowser() {
     try { host = new URL(url).hostname.toLowerCase(); } catch (_) { showResultsMessage("That address doesn't look valid."); home.hidden = false; return; }
     currentUrl = url; address.value = url; homeAddress.value = url;
     home.hidden = true;
-    const isChatGPT = host === "chatgpt.com" || host.endsWith(".chatgpt.com");
-    blocked.hidden = !isChatGPT; frame.hidden = isChatGPT;
-    if (!isChatGPT) frame.src = url;
+    const isBlockedKnown = host === "chatgpt.com" || host.endsWith(".chatgpt.com") || host === "startpage.com" || host.endsWith(".startpage.com");
+    blocked.hidden = !isBlockedKnown; frame.hidden = isBlockedKnown;
+    if (!isBlockedKnown) frame.src = url;
     addHistory(raw, record);
   }
   $("[data-browser-form]",win).addEventListener("submit",e=>{e.preventDefault();navigate(address.value);});
@@ -127,7 +143,7 @@ function openBrowser() {
   back.addEventListener("click",()=>{if(historyIndex>0){historyIndex--;navigate(history[historyIndex],false);back.disabled=historyIndex<=0;forward.disabled=historyIndex>=history.length-1;}});
   forward.addEventListener("click",()=>{if(historyIndex<history.length-1){historyIndex++;navigate(history[historyIndex],false);back.disabled=historyIndex<=0;forward.disabled=historyIndex>=history.length-1;}});
   $("[data-browser-refresh]",win).addEventListener("click",()=>{if(currentUrl){frame.src=currentUrl;}else if(lastSearch){searchLuna(lastSearch);}else{home.hidden=false;frame.hidden=true;blocked.hidden=true;}});
-  const external=()=>{if(currentUrl) window.open(currentUrl,"_blank","noopener,noreferrer"); else if(lastSearch) window.open("https://duckduckgo.com/?q="+encodeURIComponent(lastSearch),"_blank","noopener,noreferrer");};
+  const external=()=>{if(currentUrl) window.open(currentUrl,"_blank","noopener,noreferrer"); else if(lastSearch) window.open("https://www.startpage.com/do/dsearch?q="+encodeURIComponent(lastSearch)+"&cat=web&language=english","_blank","noopener,noreferrer");};
   $("[data-browser-new-tab]",win).addEventListener("click",external);
   $("[data-browser-open-external]",win).addEventListener("click",external);
   updateDock();
