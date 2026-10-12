@@ -665,3 +665,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .luna-result p { margin: 6px 0 0; color: #6f7068; font-size: 13px; line-height: 1.5; }
 .luna-full-results { display: inline-block; margin: 8px 0 18px; font-size: 13px; }
 .luna-browser-window [data-luna-results] > p { margin: 8px 0 14px; }
+
+
+.luna-web-links { display:flex; flex-wrap:wrap; gap:10px; margin:14px 0 24px; }
+.luna-web-links a { display:inline-block; padding:10px 13px; border-radius:10px; background:#e4eadc; color:#52694a; font-size:13px; font-weight:700; text-decoration:none; }
+.luna-web-links a:hover { background:#d6e1cc; text-decoration:underline; }
