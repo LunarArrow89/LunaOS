@@ -1,23 +1,76 @@
 
 const $ = (selector, root = document) => root.querySelector(selector);
 
-// Simple front-end password gate. This is a convenience screen, not secure authentication.
+// Front-end password gate with a two-minute lockout after five wrong attempts.
+// This is a convenience screen, not secure authentication.
 function setupPasswordGate() {
   const gate = $("#passwordGate");
   const form = $("#passwordForm");
   const input = $("#osPassword");
   const error = $("#passwordError");
-  if (!gate || !form || !input || !error) return;
+  const submit = form?.querySelector('button[type="submit"]');
+  if (!gate || !form || !input || !error || !submit) return;
+
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_MS = 2 * 60 * 1000;
+  let attempts = 0;
+  let lockedUntil = 0;
+  let lockoutInterval = null;
+
+  function setLocked(locked) {
+    input.disabled = locked;
+    submit.disabled = locked;
+    submit.textContent = locked ? "Please wait…" : "Unlock LunaOS →";
+    if (locked) input.blur();
+  }
+
+  function updateLockoutMessage() {
+    const remaining = Math.max(0, lockedUntil - Date.now());
+    if (remaining <= 0) {
+      lockedUntil = 0;
+      attempts = 0;
+      if (lockoutInterval !== null) {
+        clearInterval(lockoutInterval);
+        lockoutInterval = null;
+      }
+      setLocked(false);
+      error.textContent = "";
+      input.focus();
+      return;
+    }
+    const seconds = Math.ceil(remaining / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const extraSeconds = seconds % 60;
+    error.textContent = "Too many incorrect passwords. Try again in " +
+      (minutes ? minutes + "m " : "") + extraSeconds + "s.";
+    error.style.color = "#b34e4e";
+  }
+
   form.addEventListener("submit", event => {
     event.preventDefault();
+    if (Date.now() < lockedUntil) {
+      updateLockoutMessage();
+      return;
+    }
     if (input.value === "2697") {
+      if (lockoutInterval !== null) clearInterval(lockoutInterval);
       gate.remove();
       document.body.classList.add("os-unlocked");
-    } else {
-      error.textContent = "That password isn't correct. Try again.";
-      input.value = "";
-      input.focus();
+      return;
     }
+
+    attempts += 1;
+    input.value = "";
+    if (attempts >= MAX_ATTEMPTS) {
+      lockedUntil = Date.now() + LOCKOUT_MS;
+      setLocked(true);
+      updateLockoutMessage();
+      lockoutInterval = setInterval(updateLockoutMessage, 250);
+      return;
+    }
+    error.textContent = "That password isn't correct. Try again. (" + attempts + "/" + MAX_ATTEMPTS + " attempts)";
+    error.style.color = "#b34e4e";
+    input.focus();
   });
 }
 setupPasswordGate();
