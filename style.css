@@ -618,3 +618,39 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .password-submit { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 48px; padding: 0 16px; border: 0; border-radius: 12px; background: #627b68; color: #fffdf7; font-weight: bold; }
 .password-submit:hover { background: #4d6754; }
 @media (max-width: 420px) { .password-card { padding: 30px 24px 26px; } }
+
+
+/* Luna Browser app */
+.luna-browser-window { width: min(1000px, 92%); height: min(720px, 88%); min-width: 320px; min-height: 300px; }
+.luna-browser-icon { background: #dfe8dc; color: #49664f; font-size: 30px; }
+.browser-toolbar { display:flex; align-items:center; gap:6px; padding:9px 10px; border-bottom:1px solid #e1e4da; background:#f4f3ec; }
+.browser-toolbar > button { flex:0 0 34px; width:34px; height:34px; border:1px solid #dce0d4; border-radius:10px; background:#fffdf8; color:#536a50; font-size:19px; }
+.browser-toolbar > button:disabled { opacity:.35; cursor:default; }
+.browser-address-form { display:flex; align-items:center; gap:7px; min-width:0; flex:1; padding:4px 5px 4px 11px; border:1px solid #dce0d4; border-radius:12px; background:#fffdf8; color:#7e8d76; }
+.browser-address-form input,.browser-home-form input { min-width:0; width:100%; border:0; outline:none; background:transparent; color:#51483d; font-size:12px; }
+.browser-address-form button,.browser-home-form button { flex:0 0 auto; padding:7px 11px; border:0; border-radius:8px; background:#627b68; color:#fffdf7; font-size:11px; font-weight:bold; }
+.browser-page-wrap { position:relative; display:flex; flex:1; min-height:0; overflow:hidden; background:#fffdf8; }
+.browser-frame { display:block; flex:1; width:100%; height:100%; min-height:0; border:0; background:white; }
+.browser-home { width:100%; overflow:auto; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center; background:radial-gradient(ellipse at 50% 25%,#edf1e7,#fffaf1 65%); }
+.browser-home-mark { display:grid; place-items:center; width:70px; height:70px; margin-bottom:18px; border-radius:23px; background:#dfe8dc; color:#49664f; font-size:48px; }
+.browser-kicker { margin:0 0 8px; color:#89957b; font-size:9px; letter-spacing:1.8px; }
+.browser-home h2,.browser-blocked h2 { margin:0 0 20px; color:#617156; font:normal 32px Georgia,serif; }
+.browser-home-form { display:flex; gap:8px; width:min(520px,100%); padding:7px; border:1px solid #d9dfd1; border-radius:14px; background:white; box-shadow:0 7px 22px #6c78521a; }
+.browser-home-form input { padding:0 9px; }
+.browser-shortcuts { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:24px; }
+.browser-shortcuts button { display:flex; align-items:center; gap:8px; padding:10px 13px; border:1px solid #e2dacb; border-radius:11px; background:#fffdf8; color:#51483d; font-size:12px; }
+.browser-shortcuts button span { display:grid; place-items:center; width:25px; height:25px; border-radius:8px; background:#e4eadc; color:#52694a; font-weight:bold; }
+.browser-hint { max-width:470px; margin:24px 0 0; color:#8a7d6a; font-size:11px; line-height:1.6; }
+.browser-blocked { width:100%; margin:auto; padding:28px; text-align:center; }
+.browser-blocked-mark { display:grid; place-items:center; width:58px; height:58px; margin:0 auto 15px; border-radius:18px; background:#e3eadb; color:#62745b; font-size:30px; }
+.browser-blocked p { max-width:480px; margin:0 auto 18px; }
+.browser-blocked button { padding:11px 15px; border:0; border-radius:10px; background:#627b68; color:white; font-weight:bold; }
+@media(max-width:650px) {
+ .luna-browser-window { top:2%; left:2%; width:96%; height:94%; min-width:0; }
+ .browser-toolbar { gap:4px; padding:7px 5px; }
+ .browser-toolbar > button { flex-basis:29px; width:29px; height:32px; }
+ .browser-address-form { gap:4px; padding-left:7px; }
+ .browser-address-form button { padding:7px; }
+ .browser-home { padding:15px; }
+ .browser-home h2 { font-size:28px; }
+}
