@@ -627,7 +627,8 @@ function makeDraggable(win) {
 $("#openDelta")?.addEventListener("click", openDelta);
 $("#deltaIcon")?.addEventListener("click", openDelta);
 $("#home")?.addEventListener("click", openDelta);
-$("#podcastIcon")?.addEventListener("click", openPodcast);\n$("#chatgptIcon")?.addEventListener("click", openChatGPT);
+$("#podcastIcon")?.addEventListener("click", openPodcast);
+$("#chatgptIcon")?.addEventListener("click", openChatGPT);
 
 document.addEventListener("click", event => {
   const close = event.target.closest("[data-close]");
@@ -857,7 +858,8 @@ function restoreOpenWindows() {
     if (!item || !["delta", "podcast", "2048", "chatgpt"].includes(item.app)) return;
     if (item.app === "delta") openDelta();
     if (item.app === "podcast") openPodcast();
-    if (item.app === "2048") open2048();\n    if (item.app === "chatgpt") openChatGPT();
+    if (item.app === "2048") open2048();
+    if (item.app === "chatgpt") openChatGPT();
     const record = state.windows.get(item.app);
     if (!record) return;
     const win = record.element;
