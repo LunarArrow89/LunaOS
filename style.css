@@ -654,3 +654,14 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
  .browser-home { padding:15px; }
  .browser-home h2 { font-size:28px; }
 }
+
+/* Luna Search results */
+.luna-browser-window .browser-page-wrap { overflow: hidden; }
+.luna-browser-window .browser-home { overflow-y: auto; justify-content: flex-start; }
+.luna-results { width: min(100%, 650px); margin: 20px auto 0; text-align: left; }
+.luna-result { padding: 13px 15px; margin: 0 0 10px; border: 1px solid #e5e4dc; border-radius: 13px; background: rgba(255,255,255,.78); }
+.luna-result a, .luna-full-results { color: #526d59; font-weight: 700; text-decoration: none; }
+.luna-result a:hover, .luna-full-results:hover { text-decoration: underline; }
+.luna-result p { margin: 6px 0 0; color: #6f7068; font-size: 13px; line-height: 1.5; }
+.luna-full-results { display: inline-block; margin: 8px 0 18px; font-size: 13px; }
+.luna-browser-window [data-luna-results] > p { margin: 8px 0 14px; }
