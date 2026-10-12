@@ -13,9 +13,20 @@ function setupPasswordGate() {
 
   const MAX_ATTEMPTS = 5;
   const LOCKOUT_MS = 2 * 60 * 1000;
+  const LOCKOUT_KEY = "lunaos-password-locked-until";
   let attempts = 0;
   let lockedUntil = 0;
   let lockoutInterval = null;
+
+  try {
+    lockedUntil = Number(localStorage.getItem(LOCKOUT_KEY)) || 0;
+    if (lockedUntil <= Date.now()) {
+      lockedUntil = 0;
+      localStorage.removeItem(LOCKOUT_KEY);
+    }
+  } catch (storageError) {
+    lockedUntil = 0;
+  }
 
   function setLocked(locked) {
     input.disabled = locked;
@@ -29,6 +40,7 @@ function setupPasswordGate() {
     if (remaining <= 0) {
       lockedUntil = 0;
       attempts = 0;
+      try { localStorage.removeItem(LOCKOUT_KEY); } catch (storageError) {}
       if (lockoutInterval !== null) {
         clearInterval(lockoutInterval);
         lockoutInterval = null;
@@ -46,6 +58,16 @@ function setupPasswordGate() {
     error.style.color = "#b34e4e";
   }
 
+  function startLockoutCountdown() {
+    setLocked(true);
+    updateLockoutMessage();
+    if (lockedUntil > Date.now() && lockoutInterval === null) {
+      lockoutInterval = setInterval(updateLockoutMessage, 250);
+    }
+  }
+
+  if (lockedUntil > Date.now()) startLockoutCountdown();
+
   form.addEventListener("submit", event => {
     event.preventDefault();
     if (Date.now() < lockedUntil) {
@@ -54,6 +76,7 @@ function setupPasswordGate() {
     }
     if (input.value === "2697") {
       if (lockoutInterval !== null) clearInterval(lockoutInterval);
+      try { localStorage.removeItem(LOCKOUT_KEY); } catch (storageError) {}
       gate.remove();
       document.body.classList.add("os-unlocked");
       return;
@@ -63,9 +86,8 @@ function setupPasswordGate() {
     input.value = "";
     if (attempts >= MAX_ATTEMPTS) {
       lockedUntil = Date.now() + LOCKOUT_MS;
-      setLocked(true);
-      updateLockoutMessage();
-      lockoutInterval = setInterval(updateLockoutMessage, 250);
+      try { localStorage.setItem(LOCKOUT_KEY, String(lockedUntil)); } catch (storageError) {}
+      startLockoutCountdown();
       return;
     }
     error.textContent = "That password isn't correct. Try again. (" + attempts + "/" + MAX_ATTEMPTS + " attempts)";
