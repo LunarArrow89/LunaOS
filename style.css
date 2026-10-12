@@ -560,3 +560,25 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 @media (max-width: 650px) {
   .chatgpt-window { width: 92%; height: 78%; }
 }
+
+
+/* LunaOS password screen */
+.password-gate {
+  position: fixed; inset: 0; z-index: 99999; display: grid; place-items: center;
+  padding: 24px; background: radial-gradient(ellipse at 75% 20%, #dfe8d6 0%, transparent 42%), linear-gradient(135deg, #f3eadb, #e5e3d4);
+}
+.password-card {
+  width: min(100%, 390px); padding: 38px 34px 34px; border: 1px solid rgba(222,211,193,.9);
+  border-radius: 25px; background: rgba(255,251,243,.92); box-shadow: 0 22px 70px rgba(91,83,65,.13);
+}
+.password-moon { display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: 23px; border-radius: 18px; background: #e3eadb; color: #62745b; font-size: 29px; }
+.password-eyebrow { margin: 0 0 10px; color: #89957b; font-size: 10px; font-weight: bold; letter-spacing: 2px; }
+.password-card h1 { margin: 0 0 9px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(29px, 7vw, 38px); font-weight: normal; }
+.password-description { margin: 0 0 25px; color: #8a7d6a; font-size: 13px; }
+.password-label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: bold; }
+.password-input { width: 100%; min-height: 48px; padding: 0 14px; border: 1px solid #ded3c1; border-radius: 12px; background: #fffdf8; outline-offset: 2px; }
+.password-input:focus { border-color: #8da27e; }
+.password-error { min-height: 17px; margin: 8px 0 10px; color: #b34e4e; font-size: 12px; }
+.password-submit { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 48px; padding: 0 16px; border: 0; border-radius: 12px; background: #627b68; color: #fffdf7; font-weight: bold; }
+.password-submit:hover { background: #4d6754; }
+@media (max-width: 420px) { .password-card { padding: 30px 24px 26px; } }
