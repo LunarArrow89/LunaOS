@@ -5,9 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f8f3e9">
   <title>LunaOS</title>
-  <link rel="stylesheet" href="style.css?v=25">
+  <link rel="stylesheet" href="style.css?v=26">
 </head>
 <body>
+  <section id="passwordGate" class="password-gate" aria-labelledby="passwordTitle">
+    <form id="passwordForm" class="password-card" autocomplete="off">
+      <div class="password-moon" aria-hidden="true">☾</div>
+      <p class="password-eyebrow">A PRIVATE LITTLE SPACE</p>
+      <h1 id="passwordTitle">Welcome back.</h1>
+      <p class="password-description">Enter your password to open LunaOS.</p>
+      <label class="password-label" for="osPassword">Password</label>
+      <input id="osPassword" class="password-input" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Enter password" required autofocus>
+      <p id="passwordError" class="password-error" role="alert" aria-live="polite"></p>
+      <button class="password-submit" type="submit">Unlock LunaOS <span aria-hidden="true">→</span></button>
+    </form>
+  </section>
   <header class="topbar">
     <div class="logo"><span class="logo-cup">☾</span> LunaOS</div>
     <div class="topbar-right"><span class="online-dot"></span><span>YOUR LITTLE DESKTOP</span><span id="clock"></span></div>
@@ -44,6 +56,6 @@
     <button id="taskbarClock" class="taskbar-clock" title="Date and time">--:--</button>
   </footer>
   <audio id="lunaRainAudio" src="./rain.mp3" autoplay loop preload="auto" aria-hidden="true"></audio>
-  <script src="script.js?v=29"></script>
+  <script src="script.js?v=30"></script>
 </body>
 </html>
