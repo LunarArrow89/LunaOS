@@ -1,6 +1,9 @@
 const { app, BrowserWindow, shell, session, ipcMain } = require("electron");
 const path = require("path");
 
+// Allow the bundled rain ambience to autoplay in the desktop app.
+app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
+
 function isSafeWebUrl(value) {
   try {
     const url = new URL(value);
