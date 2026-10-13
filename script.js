@@ -162,11 +162,6 @@ function openDelta() {
 }
 
 
-function openChatGPT() {
-  // ChatGPT blocks iframe embedding, so launch the real site directly.
-  // This function is called by the user's click on the ChatGPT desktop icon.
-  window.open("https://chatgpt.com/", "_blank", "noopener,noreferrer");
-}
 
 function open2048() {
   const existing = state.windows.get("2048");
@@ -689,7 +684,6 @@ $("#openDelta")?.addEventListener("click", openDelta);
 $("#deltaIcon")?.addEventListener("click", openDelta);
 $("#home")?.addEventListener("click", openDelta);
 $("#podcastIcon")?.addEventListener("click", openPodcast);
-$("#chatgptIcon")?.addEventListener("click", openChatGPT);
 
 document.addEventListener("click", event => {
   const close = event.target.closest("[data-close]");
@@ -916,11 +910,10 @@ function restoreOpenWindows() {
     saved = [];
   }
   saved.forEach(item => {
-    if (!item || !["delta", "podcast", "2048", "browser"].includes(item.app)) return;
+    if (!item || !["delta", "podcast", "2048"].includes(item.app)) return;
     if (item.app === "delta") openDelta();
     if (item.app === "podcast") openPodcast();
     if (item.app === "2048") open2048();
-    if (item.app === "browser") openBrowser();
     const record = state.windows.get(item.app);
     if (!record) return;
     const win = record.element;
@@ -943,16 +936,6 @@ function restoreOpenWindows() {
   });
   updateDock();
 }
-// Add the puzzle shortcut without changing the desktop's existing markup.
-const browserShortcut = document.createElement("button");
-browserShortcut.className = "desktop-icon";
-browserShortcut.id = "browserIcon";
-browserShortcut.setAttribute("aria-label", "Open Luna Browser");
-const browserGlyph = document.createElement("span"); browserGlyph.className = "icon luna-browser-icon"; browserGlyph.textContent = "◎"; browserGlyph.setAttribute("aria-hidden", "true");
-const browserLabel = document.createElement("span"); browserLabel.textContent = "Luna Browser";
-browserShortcut.append(browserGlyph, browserLabel);
-browserShortcut.addEventListener("click", openBrowser);
-$(".icons").appendChild(browserShortcut);
 const puzzleShortcut = document.createElement("button");
 puzzleShortcut.className = "desktop-icon";
 puzzleShortcut.id = "2048Icon";
