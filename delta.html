@@ -148,6 +148,10 @@ button { border: 0; border-radius: 8px; padding: 10px 15px; font-weight: 700; }
   border-top: 1px solid var(--border);
 }
 .output { flex: 1; min-height: 320px; padding: 15px; overflow: auto; }
+    /* Output is a text log only. Never render a game preview or embedded app here. */
+    #output canvas, #output iframe, #output video, #output svg, #output object,
+    #output embed, #output #objectMap, #output .object-map, #output .game-screen,
+    #output .game-preview { display: none !important; }
 .output-line {
   margin: 0 0 8px;
   color: #e8eaf2;
@@ -793,6 +797,20 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
   <script>
 const editor = document.getElementById("codeEditor");
 const output = document.getElementById("output");
+// Keep Output strictly as a text/message log even if stale scripts try to inject a preview.
+function enforceTextOnlyOutput() {
+  for (const child of [...output.children]) {
+    const allowed = child.matches("p.output-line, p.placeholder");
+    if (!allowed) child.remove();
+    else {
+      child.querySelectorAll("canvas, iframe, video, svg, object, embed, #objectMap, .object-map, .game-screen, .game-preview")
+        .forEach(node => node.remove());
+    }
+  }
+}
+const outputGuard = new MutationObserver(enforceTextOnlyOutput);
+outputGuard.observe(output, { childList: true, subtree: true });
+enforceTextOnlyOutput();
 const lineNumbers = document.getElementById("lineNumbers");
 const runButton = document.getElementById("runButton");
 const runStatus = document.getElementById("runStatus");
