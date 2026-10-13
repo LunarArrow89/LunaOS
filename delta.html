@@ -1507,9 +1507,9 @@ function runCode() {
         };
         const color = getProperty("color", "#ffffff").replace(/^["']|["']$/g, "");
         const size = Math.max(8, Number(getProperty("size", "24")) || 24);
-        const hasX = /(?:^|,)\\s*x\\s*:/i.test(properties);
-        const hasY = /(?:^|,)\\s*y\\s*:/i.test(properties);
-        const screenMatch = editor.value.match(/^\\s*screen\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)/m);
+        const hasX = /(?:^|,)\s*x\s*:/i.test(properties);
+        const hasY = /(?:^|,)\s*y\s*:/i.test(properties);
+        const screenMatch = editor.value.match(/^\s*screen\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/m);
         const screenWidth = Number(screenMatch?.[1]) || 640;
         const screenHeight = Number(screenMatch?.[2]) || 400;
         const x = hasX ? (Number(getProperty("x", "0")) || 0) : screenWidth / 2;
