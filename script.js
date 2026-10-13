@@ -92,6 +92,8 @@ function setupPasswordGate() {
       } catch (storageError) {}
       gate.remove();
       document.body.classList.add("os-unlocked");
+      // Start ambience directly from the successful password-submit gesture.
+      startRainAudio();
       return;
     }
 
