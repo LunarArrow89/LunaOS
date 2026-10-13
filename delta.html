@@ -1395,7 +1395,7 @@ function startRuntimeMovement(){
   };runtimeWindow.requestAnimationFrame(frame);
 }
 function openRuntimeWindow(){
-  runtimeWindow=window.open("","DeltaProgramWindow","popup,width=900,height=650,resizable=yes,scrollbars=yes");
+  runtimeWindow=window.open("about:blank","_blank","popup=yes,width=900,height=650,resizable=yes,scrollbars=yes");
   if(!runtimeWindow){addOutput("Allow pop-ups for this site so Delta can open your program in a separate game window.","error");runStatus.textContent="Popup blocked";return false;}
   runtimeScene=[];runtimeBackground="#000000";runtimeMovementStarted=false;runtimeLastFrame=0;runtimeHeldKeys=new Set();runtimeSquareSettings={x:100,y:100,size:40,speed:3.5};
   runtimeWindow.document.open();
@@ -1409,7 +1409,7 @@ function openRuntimeWindow(){
 function runCode() {
   output.replaceChildren();
   runStatus.textContent = "Running…";
-  openRuntimeWindow();
+  if (!openRuntimeWindow()) return;
   const started = performance.now();
   try {
     const source = editor.value
