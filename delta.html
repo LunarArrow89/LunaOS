@@ -863,10 +863,14 @@ refreshProjects(safeStorageGet(PROJECT_NAME_KEY, ""));
 const starterCode = `// Your first Delta program
 screen(640, 400)
 background("#10131c")
-text(:Hello!:)`
+centerText(:Hello!)`
 
 const previousCode = safeStorageGet("delta-code", "") || "";
-editor.value = previousCode.includes('print("Welcome to Delta!")') ? starterCode : (previousCode || starterCode);
+const oldStarterCode = `// Your first Delta program
+screen(640, 400)
+background("#10131c")
+text(:Hello!:)`;
+editor.value = previousCode.includes('print("Welcome to Delta!")') || previousCode.trim() === oldStarterCode ? starterCode : (previousCode || starterCode);
 if (!safeStorageSet("delta-code", editor.value)) {
   saveStatus.textContent = "Storage unavailable — your code may not persist after closing";
 }
