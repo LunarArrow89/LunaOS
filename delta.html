@@ -1418,10 +1418,11 @@ function runCode() {
   const started = performance.now();
   try {
     const source = editor.value
-      // Draw Delta's text(:words:) syntax directly onto the game screen.
-      .replace(/^([ \t]*)text\(\s*:([^:]*)\:\s*(?:\+\s*\/([A-Za-z_][A-Za-z0-9_]*)\/)?\s*\)[ \t]*$/gm, (_, indent, message, variable) => {
-        const textPart = JSON.stringify(message.trimEnd());
-        const value = variable ? textPart + " + String(" + variable + ")" : textPart;
+      // Convert plain Delta text commands into canvas drawing commands.
+      .replace(/^([ \t]*)text\(\s*:([\s\S]*?):\s*\)[ \t]*$/gm, (_, indent, message) => {
+        const parts = message.match(/^(.*?)(?:\s*\+\s*\/([A-Za-z_][A-Za-z0-9_]*)\/)?\s*$/);
+        const textPart = JSON.stringify((parts?.[1] ?? message).trimEnd());
+        const value = parts?.[2] ? textPart + " + String(" + parts[2] + ")" : textPart;
         return indent + "drawText(" + value + ", 100, 100, \"#ffffff\", 24)";
       })
       // Allow simple one-line indented-style conditions without requiring braces.
@@ -1492,7 +1493,11 @@ function runCode() {
         const x = Number(getProperty("x", "100")) || 0;
         const y = Number(getProperty("y", "100")) || 0;
         return indent + "drawText(" + JSON.stringify(message) + ", " + x + ", " + y + ", " + JSON.stringify(color) + ", " + size + ")";
-      });
+      })
+      // Safety fallback: plain text syntax must never be interpreted as Output/print.
+      .replace(/^([ \t]*)text\(\s*:([^:\\r\\n]*):\s*\)[ \t]*$/gm, (_, indent, message) =>
+        indent + "drawText(" + JSON.stringify(message.trimEnd()) + ", 100, 100, \"#ffffff\", 24)"
+      );
     const parser = new DeltaParser(tokenize(source), value => addOutput(formatValue(value)));
     parser.run();
     addOutput("✓ Finished in " + Math.round(performance.now() - started) + " ms", "success");
