@@ -34,7 +34,41 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
   let notes = cloneNotes(parts[0].notes);
   let noteColor = "#cdb9e9", audio = null, playing = false, timer = null, step = 0, nextTime = 0;
   let oscillators = new Set();
+  const PROJECT_KEY = "cistamusica-project";
   const setStatus = message => { status.textContent = message; };
+  function persistProject() {
+    try {
+      localStorage.setItem(PROJECT_KEY, JSON.stringify({
+        parts: parts.map(part => ({name: part.name, notes: cloneNotes(part.notes)})),
+        currentPart,
+        tempo: $("tempo").value,
+        instrument: $("instrument").value,
+        noteColor
+      }));
+    } catch (error) {
+      setStatus("Couldn't autosave your song. Browser storage may be unavailable.");
+    }
+  }
+  function restoreProject() {
+    try {
+      const data = JSON.parse(localStorage.getItem(PROJECT_KEY) || "null");
+      if (!data || !Array.isArray(data.parts) || !data.parts.length) return;
+      const validNotes = value => Array.isArray(value) && value.length === 8 &&
+        value.every(line => Array.isArray(line) && line.length === 16);
+      const restored = data.parts
+        .filter(part => part && validNotes(part.notes))
+        .slice(0, 12)
+        .map(part => ({name: String(part.name || "Part").slice(0, 32), notes: cloneNotes(part.notes)}));
+      if (!restored.length) return;
+      parts = restored;
+      currentPart = Math.max(0, Math.min(Number(data.currentPart) || 0, parts.length - 1));
+      notes = cloneNotes(parts[currentPart].notes);
+      if (data.tempo) $("tempo").value = data.tempo;
+      if (["square", "triangle", "pixel"].includes(data.instrument)) $("instrument").value = data.instrument;
+      if (typeof data.noteColor === "string" && /^#[0-9a-f]{6}$/i.test(data.noteColor)) noteColor = data.noteColor;
+    } catch (error) {}
+  }
+  restoreProject();
   function ensureAudio() {
     try {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -61,11 +95,13 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
   }
   function syncPart() {
     if (parts[currentPart]) parts[currentPart].notes = cloneNotes(notes);
+    persistProject();
   }
   function renderTimeline() {
     const timeline = $("timeline");
     if (!timeline) return;
     timeline.replaceChildren();
+    persistProject();
     parts.forEach((part, index) => {
       const button = document.createElement("button");
       button.type = "button";
@@ -117,6 +153,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
         button.setAttribute("aria-label", row.name + ", step " + (col + 1));
         button.addEventListener("click", () => {
           notes[rowIndex][col] = !notes[rowIndex][col];
+          syncPart();
           button.classList.toggle("on", notes[rowIndex][col]);
           button.setAttribute("aria-pressed", String(notes[rowIndex][col]));
           if (notes[rowIndex][col] && ensureAudio()) playNote(row.hz, audio.currentTime, 0.16);
@@ -268,6 +305,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
   $("export").addEventListener("click", () => {
     setStatus("WAV export is temporarily unavailable; use the Play button to hear your loop.");
   });
+  $("tempo").addEventListener("input", persistProject);
+  $("instrument").addEventListener("change", persistProject);
   document.addEventListener("visibilitychange", () => { if (document.hidden && playing) stop(); });
   render(); renderTimeline(); renderSaved();
 })();
