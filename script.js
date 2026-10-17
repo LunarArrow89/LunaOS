@@ -731,7 +731,8 @@ function openMusic() {
 $("#openDelta")?.addEventListener("click", openDelta);
 $("#deltaIcon")?.addEventListener("click", openDelta);
 $("#home")?.addEventListener("click", openDelta);
-$("#podcastIcon")?.addEventListener("click", openPodcast);\n$("#musicIcon")?.addEventListener("click", openMusic);
+$("#podcastIcon")?.addEventListener("click", openPodcast);
+$("#musicIcon")?.addEventListener("click", openMusic);
 
 document.addEventListener("click", event => {
   const close = event.target.closest("[data-close]");
@@ -979,7 +980,8 @@ function restoreOpenWindows() {
     if (!item || !["delta", "podcast", "2048", "music"].includes(item.app)) return;
     if (item.app === "delta") openDelta();
     if (item.app === "podcast") openPodcast();
-    if (item.app === "2048") open2048();\n    if (item.app === "music") openMusic();
+    if (item.app === "2048") open2048();
+    if (item.app === "music") openMusic();
     const record = state.windows.get(item.app);
     if (!record) return;
     const win = record.element;
