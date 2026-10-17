@@ -29,7 +29,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
   if (!grid || !status || !progress || !saved) return;
   const blankNotes = () => Array.from({length:8}, () => Array(16).fill(false));
   const cloneNotes = value => value.map(line => line.slice());
-  let parts = [{name:"Part A", notes:blankNotes()}];
+  let parts = [{name:"Part A", notes:blankNotes(), instrument:"square"}];
   let currentPart = 0;
   let notes = cloneNotes(parts[0].notes);
   let noteColor = "#cdb9e9", audio = null, playing = false, timer = null, step = 0, nextTime = 0;
@@ -39,7 +39,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
   function persistProject() {
     try {
       localStorage.setItem(PROJECT_KEY, JSON.stringify({
-        parts: parts.map(part => ({name: part.name, notes: cloneNotes(part.notes)})),
+        parts: parts.map(part => ({name: part.name, notes: cloneNotes(part.notes), instrument: part.instrument || "square"})),
         currentPart,
         tempo: $("tempo").value,
         instrument: $("instrument").value,
@@ -58,7 +58,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
       const restored = data.parts
         .filter(part => part && validNotes(part.notes))
         .slice(0, 12)
-        .map(part => ({name: String(part.name || "Part").slice(0, 32), notes: cloneNotes(part.notes)}));
+        .map(part => ({name: String(part.name || "Part").slice(0, 32), notes: cloneNotes(part.notes), instrument: ["square", "triangle", "pixel"].includes(part.instrument) ? part.instrument : "square"}));
       if (!restored.length) return;
       parts = restored;
       currentPart = Math.max(0, Math.min(Number(data.currentPart) || 0, parts.length - 1));
@@ -78,10 +78,10 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
       return true;
     } catch (error) { setStatus("Couldn't start audio: " + error.message); return false; }
   }
-  function playNote(freq, when, duration) {
+  function playNote(freq, when, duration, partInstrument) {
     if (!ensureAudio()) return;
     const osc = audio.createOscillator(), gain = audio.createGain();
-    const instrument = $("instrument").value;
+    const instrument = partInstrument || $("instrument").value;
     osc.type = instrument === "pixel" ? "square" : instrument;
     osc.frequency.value = freq;
     if (instrument === "pixel") duration = Math.min(duration, 0.12);
@@ -145,13 +145,14 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
       title.textContent = part.name;
       const detail = document.createElement("small");
       const count = part.notes.reduce((sum, line) => sum + line.filter(Boolean).length, 0);
-      detail.textContent = count + " notes · 16 steps";
+      detail.textContent = count + " notes · " + (part.instrument || "square") + " · 16 steps";
       button.append(title, detail);
       button.addEventListener("click", () => {
         if (playing) stop();
         syncPart();
         currentPart = index;
         notes = cloneNotes(parts[currentPart].notes);
+        $("instrument").value = parts[currentPart].instrument || "square";
         render(); renderTimeline();
         setStatus("Editing " + parts[currentPart].name + ".");
       });
@@ -210,7 +211,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
     const tempo = Math.max(50, Math.min(180, Number($("tempo").value) || 110));
     const interval = 60 / tempo / 4;
     while (nextTime < audio.currentTime + 0.12) {
-      for (let row = 0; row < 8; row++) if (notes[row][step]) playNote(rows[row].hz, nextTime, interval * 0.88);
+      for (let row = 0; row < 8; row++) if (notes[row][step]) playNote(rows[row].hz, nextTime, interval * 0.88, parts[currentPart].instrument || "square");
       const current = step;
       setTimeout(() => {
         if (!playing) return;
@@ -224,6 +225,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
         step = 0;
         currentPart = (currentPart + 1) % parts.length;
         notes = cloneNotes(parts[currentPart].notes);
+        $("instrument").value = parts[currentPart].instrument || "square";
         render(); renderTimeline();
       }
       nextTime += interval;
@@ -290,14 +292,14 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
     if (parts.length >= 12) { setStatus("You can have up to 12 song parts."); return; }
     syncPart();
     const letter = String.fromCharCode(65 + parts.length);
-    parts.push({name:"Part " + letter, notes:blankNotes()});
+    parts.push({name:"Part " + letter, notes:blankNotes(), instrument:$("instrument").value});
     currentPart = parts.length - 1; notes = cloneNotes(parts[currentPart].notes);
     render(); renderTimeline(); setStatus("Added a blank " + parts[currentPart].name + ".");
   });
   $("duplicatePart").addEventListener("click", () => {
     if (parts.length >= 12) { setStatus("You can have up to 12 song parts."); return; }
     syncPart();
-    const copy = {name:parts[currentPart].name + " copy", notes:cloneNotes(parts[currentPart].notes)};
+    const copy = {name:parts[currentPart].name + " copy", notes:cloneNotes(parts[currentPart].notes), instrument:parts[currentPart].instrument || "square"};
     parts.splice(currentPart + 1, 0, copy); currentPart++;
     notes = cloneNotes(copy.notes); render(); renderTimeline(); setStatus("Duplicated a part. Edit it without changing the original.");
   });
@@ -340,8 +342,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
     setStatus("WAV export is temporarily unavailable; use the Play button to hear your loop.");
   });
   $("tempo").addEventListener("input", persistProject);
-  $("instrument").addEventListener("change", persistProject);
+  $("instrument").addEventListener("change", () => { parts[currentPart].instrument = $("instrument").value; renderTimeline(); persistProject(); });
   document.addEventListener("visibilitychange", () => { if (document.hidden && playing) stop(); });
+  $("instrument").value = parts[currentPart].instrument || "square";
   render(); renderTimeline(); renderSaved();
 })();
 </script>
