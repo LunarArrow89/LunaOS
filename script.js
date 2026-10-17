@@ -717,7 +717,7 @@ function openMusic() {
       <button class="close" data-close title="Close" aria-label="Close">×</button>
     </div>
     <div class="window-content music-content">
-      <iframe class="music-frame" src="./music.html?v=5" title="Cistamusica music maker" allow="autoplay" loading="eager"></iframe>
+      <iframe class="music-frame" src="./music.html?v=6" title="Cistamusica music maker" allow="autoplay" loading="eager"></iframe>
     </div>`;
   $("#windows").appendChild(win);
   state.windows.set("music", { element: win, title: "Cistamusica", glyph: "♫" });
