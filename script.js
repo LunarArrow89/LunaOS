@@ -679,11 +679,41 @@ function makeDraggable(win) {
   bar.addEventListener("pointercancel", stop);
 }
 
+function openMusic() {
+  const existing = state.windows.get("music");
+  if (existing) {
+    existing.element.style.display = "flex";
+    focusWindow(existing.element);
+    updateDock();
+    return;
+  }
+  const win = document.createElement("section");
+  win.className = "app-window music-window";
+  win.dataset.window = "music";
+  win.style.zIndex = ++state.zIndex;
+  win.innerHTML = `
+    <div class="window-title">
+      <span class="mini-glyph" aria-hidden="true">♫</span><strong>Moonloop Studio</strong>
+      <button data-maximize title="Maximize window" aria-label="Maximize window">□</button>
+      <button data-minimize title="Minimize" aria-label="Minimize">−</button>
+      <button class="close" data-close title="Close" aria-label="Close">×</button>
+    </div>
+    <div class="window-content music-content">
+      <iframe class="music-frame" src="./music.html" title="Moonloop Studio music maker" allow="autoplay" loading="eager"></iframe>
+    </div>`;
+  $("#windows").appendChild(win);
+  state.windows.set("music", { element: win, title: "Moonloop Studio", glyph: "♫" });
+  makeDraggable(win);
+  makeResizable(win);
+  win.addEventListener("pointerdown", () => focusWindow(win));
+  updateDock();
+}
+
 // Desktop and home app launchers get direct click handlers so they remain reliable.
 $("#openDelta")?.addEventListener("click", openDelta);
 $("#deltaIcon")?.addEventListener("click", openDelta);
 $("#home")?.addEventListener("click", openDelta);
-$("#podcastIcon")?.addEventListener("click", openPodcast);
+$("#podcastIcon")?.addEventListener("click", openPodcast);\n$("#musicIcon")?.addEventListener("click", openMusic);
 
 document.addEventListener("click", event => {
   const close = event.target.closest("[data-close]");
@@ -704,6 +734,24 @@ document.addEventListener("click", event => {
         win.style.top = "";
         win.style.width = "";
         win.style.height = "";
+      } else {
+        win.classList.add("is-maximized");
+        win.style.left = "0";
+        win.style.top = "0";
+        win.style.width = "100%";
+        win.style.height = "100%";
+      }
+      updateMaximizeButton(win);
+      return;
+    }
+
+    if (win.dataset.window === "music") {
+      if (win.classList.contains("is-maximized")) {
+        win.classList.remove("is-maximized");
+        win.style.left = "8%";
+        win.style.top = "6%";
+        win.style.width = "min(1120px, 88%)";
+        win.style.height = "min(760px, 88%)";
       } else {
         win.classList.add("is-maximized");
         win.style.left = "0";
@@ -782,7 +830,7 @@ document.addEventListener("fullscreenchange", () => {
   $$(".app-window").forEach(win => {
     if (win.dataset.window !== "delta") {
       // These app windows maximize within LunaOS without toggling browser fullscreen.
-      if (win.dataset.window === "podcast" || win.dataset.window === "2048") updateMaximizeButton(win);
+      if (win.dataset.window === "podcast" || win.dataset.window === "2048" || win.dataset.window === "music") updateMaximizeButton(win);
       return;
     }
     if (pageFullscreen) {
@@ -910,10 +958,10 @@ function restoreOpenWindows() {
     saved = [];
   }
   saved.forEach(item => {
-    if (!item || !["delta", "podcast", "2048"].includes(item.app)) return;
+    if (!item || !["delta", "podcast", "2048", "music"].includes(item.app)) return;
     if (item.app === "delta") openDelta();
     if (item.app === "podcast") openPodcast();
-    if (item.app === "2048") open2048();
+    if (item.app === "2048") open2048();\n    if (item.app === "music") openMusic();
     const record = state.windows.get(item.app);
     if (!record) return;
     const win = record.element;
@@ -925,7 +973,7 @@ function restoreOpenWindows() {
         win.style.width = "100%";
         win.style.height = "100%";
       }
-    } else if (item.app === "podcast") {
+    } else if (item.app === "podcast" || item.app === "music") {
       win.classList.remove("is-maximized");
       if (item.left) win.style.left = item.left;
       if (item.top) win.style.top = item.top;
