@@ -83,6 +83,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 #openApps button:hover, #openApps button.selected { background: #e1e8d9; border-color: #d2dcc9; }
 .dock-spacer { flex: 1; }
 .dock-note { color: #8a947c; font-size: 11px; white-space: nowrap; }
+.rain-pause-button { width: 34px; height: 34px; flex: 0 0 34px; border: 1px solid var(--line); border-radius: 50%; background: rgba(233,224,246,.72); color: #78619a; font-size: 16px; cursor: pointer; display: grid; place-items: center; }
+.rain-pause-button:hover { background: #e9e0f6; }
 .taskbar-clock { border: 0; background: transparent; font-size: 12px; min-width: 65px; text-align: right; }
 .launcher { position: absolute; z-index: 20; left: 15px; bottom: 69px; width: min(340px, calc(100vw - 30px)); padding: 17px; border: 1px solid #d6cbb9; border-radius: 16px; background: rgba(255,250,241,.98); box-shadow: 0 16px 50px rgba(92,74,48,.2); }
 .hidden { display: none !important; }
