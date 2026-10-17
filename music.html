@@ -64,7 +64,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
       notes = cloneNotes(parts[currentPart].notes);
       if (data.tempo) $("tempo").value = data.tempo;
       if (["square", "triangle", "pixel"].includes(data.instrument)) $("instrument").value = data.instrument;
-      if (typeof data.noteColor === "string" && /^#[0-9a-f]{6}$/i.test(data.noteColor)) noteColor = data.noteColor;\n      if (typeof data.layerParts === "boolean") $("layerParts").checked = data.layerParts;
+      if (typeof data.noteColor === "string" && /^#[0-9a-f]{6}$/i.test(data.noteColor)) noteColor = data.noteColor;
+      if (typeof data.layerParts === "boolean") $("layerParts").checked = data.layerParts;
     } catch (error) {}
   }
   restoreProject();
@@ -210,7 +211,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
     const tempo = Math.max(50, Math.min(180, Number($("tempo").value) || 110));
     const interval = 60 / tempo / 4;
     while (nextTime < audio.currentTime + 0.12) {
-      const layer = $("layerParts") && $("layerParts").checked;\n      const activeParts = layer ? parts : [parts[currentPart]];\n      activeParts.forEach(part => { for (let row = 0; row < 8; row++) if (part.notes[row][step]) playNote(rows[row].hz, nextTime, interval * 0.88, part.instrument || "square"); });
+      const layer = $("layerParts") && $("layerParts").checked;
+      const activeParts = layer ? parts : [parts[currentPart]];
+      activeParts.forEach(part => { for (let row = 0; row < 8; row++) if (part.notes[row][step]) playNote(rows[row].hz, nextTime, interval * 0.88, part.instrument || "square"); });
       const current = step;
       setTimeout(() => {
         if (!playing) return;
@@ -340,7 +343,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
   $("export").addEventListener("click", () => {
     setStatus("WAV export is temporarily unavailable; use the Play button to hear your loop.");
   });
-  $("layerParts").addEventListener("change", () => { persistProject(); setStatus($("layerParts").checked ? "Layer mode: all parts play together." : "Timeline mode: parts play one after another."); });\n  $("tempo").addEventListener("input", persistProject);
+  $("layerParts").addEventListener("change", () => { persistProject(); setStatus($("layerParts").checked ? "Layer mode: all parts play together." : "Timeline mode: parts play one after another."); });
+  $("tempo").addEventListener("input", persistProject);
   $("instrument").addEventListener("change", () => { parts[currentPart].instrument = $("instrument").value; renderTimeline(); persistProject(); });
   document.addEventListener("visibilitychange", () => { if (document.hidden && playing) stop(); });
   $("instrument").value = parts[currentPart].instrument || "square";
