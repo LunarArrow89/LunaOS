@@ -63,7 +63,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
       notes = cloneNotes(parts[currentPart].notes);
       if (data.tempo) $("tempo").value = data.tempo;
       if (["square", "triangle", "pixel"].includes(data.instrument)) $("instrument").value = data.instrument;
-      if (typeof data.noteColor === "string" && /^#[0-9a-f]{6}$/i.test(data.noteColor)) noteColor = data.noteColor;
+      if (typeof data.noteColor === "string" && /^#[0-9a-f]{6}$/i.test(data.noteColor)) noteColor = data.noteColor;\n      if (typeof data.layerParts === "boolean") $("layerParts").checked = data.layerParts;
     } catch (error) {}
   }
   restoreProject();
