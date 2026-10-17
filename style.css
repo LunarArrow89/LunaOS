@@ -675,3 +675,50 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .luna-web-links { display:flex; flex-wrap:wrap; gap:10px; margin:14px 0 24px; }
 .luna-web-links a { display:inline-block; padding:10px 13px; border-radius:10px; background:#e4eadc; color:#52694a; font-size:13px; font-weight:700; text-decoration:none; }
 .luna-web-links a:hover { background:#d6e1cc; text-decoration:underline; }
+
+
+/* Moonloop Studio music maker window */
+.app-window:has(.music-frame) {
+  width: min(1120px, 88%);
+  height: min(760px, 88%);
+  min-width: 320px;
+  min-height: 360px;
+}
+.music-content {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 !important;
+  overflow: hidden;
+  background: #fbf8ff;
+}
+.music-frame {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  background: #fbf8ff;
+}
+.app-window:has(.music-frame).is-maximized {
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+}
+@media (max-width: 650px) {
+  .app-window:has(.music-frame) {
+    top: 2%;
+    left: 2%;
+    width: 96%;
+    height: 94%;
+    min-width: 0;
+    min-height: 0;
+  }
+}
