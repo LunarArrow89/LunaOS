@@ -201,6 +201,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
           syncPart();
           button.classList.toggle("on", notes[rowIndex][col]);
           button.setAttribute("aria-pressed", String(notes[rowIndex][col]));
+          renderTimeline();
           if (notes[rowIndex][col] && ensureAudio()) playNote(row.hz, audio.currentTime, 0.16);
         });
         grid.appendChild(button);
