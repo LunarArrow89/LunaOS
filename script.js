@@ -11,6 +11,23 @@ function setupPasswordGate() {
   const submit = form?.querySelector('button[type="submit"]');
   if (!gate || !form || !input || !error || !submit) return;
 
+  // Require the password once per local calendar day, then remember today's unlock.
+  const DAILY_UNLOCK_KEY = "lunaos-password-unlocked-date";
+  const getLocalDateKey = () => {
+    const now = new Date();
+    return now.getFullYear() + "-" +
+      String(now.getMonth() + 1).padStart(2, "0") + "-" +
+      String(now.getDate()).padStart(2, "0");
+  };
+  try {
+    if (localStorage.getItem(DAILY_UNLOCK_KEY) === getLocalDateKey()) {
+      gate.remove();
+      document.body.classList.add("os-unlocked");
+      startRainAudio();
+      return;
+    }
+  } catch (storageError) {}
+
   const MAX_ATTEMPTS = 5;
   const LOCKOUT_MS = 2 * 60 * 1000;
   const LOCKOUT_KEY = "lunaos-password-locked-until";
@@ -89,6 +106,7 @@ function setupPasswordGate() {
       try {
         localStorage.removeItem(LOCKOUT_KEY);
         localStorage.removeItem(ATTEMPTS_KEY);
+        localStorage.setItem(DAILY_UNLOCK_KEY, getLocalDateKey());
       } catch (storageError) {}
       gate.remove();
       document.body.classList.add("os-unlocked");
