@@ -290,9 +290,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
     if (parts.length >= 12) { setStatus("You can have up to 12 song parts."); return; }
     syncPart();
     const letter = String.fromCharCode(65 + parts.length);
-    parts.push({name:"Part " + letter, notes:cloneNotes(notes)});
+    parts.push({name:"Part " + letter, notes:blankNotes()});
     currentPart = parts.length - 1; notes = cloneNotes(parts[currentPart].notes);
-    render(); renderTimeline(); setStatus("Added " + parts[currentPart].name + " as a copy. Change its notes to make a variation.");
+    render(); renderTimeline(); setStatus("Added a blank " + parts[currentPart].name + ".");
   });
   $("duplicatePart").addEventListener("click", () => {
     if (parts.length >= 12) { setStatus("You can have up to 12 song parts."); return; }
