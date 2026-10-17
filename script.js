@@ -711,16 +711,16 @@ function openMusic() {
   win.style.zIndex = ++state.zIndex;
   win.innerHTML = `
     <div class="window-title">
-      <span class="mini-glyph" aria-hidden="true">♫</span><strong>Moonloop Studio</strong>
+      <span class="mini-glyph" aria-hidden="true">♫</span><strong>Cista Musica</strong>
       <button data-maximize title="Maximize window" aria-label="Maximize window">□</button>
       <button data-minimize title="Minimize" aria-label="Minimize">−</button>
       <button class="close" data-close title="Close" aria-label="Close">×</button>
     </div>
     <div class="window-content music-content">
-      <iframe class="music-frame" src="./music.html" title="Moonloop Studio music maker" allow="autoplay" loading="eager"></iframe>
+      <iframe class="music-frame" src="./music.html" title="Cista Musica music maker" allow="autoplay" loading="eager"></iframe>
     </div>`;
   $("#windows").appendChild(win);
-  state.windows.set("music", { element: win, title: "Moonloop Studio", glyph: "♫" });
+  state.windows.set("music", { element: win, title: "Cista Musica", glyph: "♫" });
   makeDraggable(win);
   makeResizable(win);
   win.addEventListener("pointerdown", () => focusWindow(win));
