@@ -886,9 +886,31 @@ localStorage.removeItem("hearth-app-links");
 
 
 // Always-on rain audio and animated rain overlay.
+let rainPausedByUser = false;
+const rainPauseButton = $("#rainPauseButton");
+if (rainPauseButton) {
+  rainPauseButton.addEventListener("click", () => {
+    const audio = $("#lunaRainAudio");
+    if (!audio) return;
+    rainPausedByUser = !rainPausedByUser;
+    if (rainPausedByUser) {
+      audio.pause();
+      rainPauseButton.textContent = "▶";
+      rainPauseButton.title = "Resume rain sounds";
+      rainPauseButton.setAttribute("aria-label", "Resume rain sounds");
+      rainPauseButton.setAttribute("aria-pressed", "true");
+    } else {
+      rainPauseButton.textContent = "Ⅱ";
+      rainPauseButton.title = "Pause rain sounds";
+      rainPauseButton.setAttribute("aria-label", "Pause rain sounds");
+      rainPauseButton.setAttribute("aria-pressed", "false");
+      startRainAudio();
+    }
+  });
+}
 function startRainAudio() {
   const audio = $("#lunaRainAudio");
-  if (!audio) return;
+  if (!audio || rainPausedByUser) return;
   audio.loop = true;
   audio.muted = false;
   // Lift the rain slightly while an uploaded podcast is playing so both are audible.
@@ -909,10 +931,10 @@ function startRainAudio() {
 const rainAudio = $("#lunaRainAudio");
 if (rainAudio) {
   rainAudio.addEventListener("pause", () => {
-    if (!document.hidden) startRainAudio();
+    if (!rainPausedByUser && !document.hidden) startRainAudio();
   });
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) startRainAudio();
+    if (!rainPausedByUser && !document.hidden) startRainAudio();
   });
 }
 function setupRainEffects() {
