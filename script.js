@@ -604,6 +604,7 @@ function makeResizable(win) {
       const stop = () => {
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", stop);
+        saveOpenWindows();
         window.removeEventListener("pointercancel", stop);
       };
       window.addEventListener("pointermove", move);
@@ -692,7 +693,7 @@ function makeDraggable(win) {
     win.style.left = Math.max(0, Math.min(parent.width - win.offsetWidth, startLeft + event.clientX - startX)) + "px";
     win.style.top = Math.max(0, Math.min(parent.height - 60, startTop + event.clientY - startY)) + "px";
   });
-  const stop = () => moving = false;
+  const stop = () => { if (moving) { moving = false; saveOpenWindows(); } };
   bar.addEventListener("pointerup", stop);
   bar.addEventListener("pointercancel", stop);
 }
@@ -717,7 +718,7 @@ function openMusic() {
       <button class="close" data-close title="Close" aria-label="Close">×</button>
     </div>
     <div class="window-content music-content">
-      <iframe class="music-frame" src="./music.html?v=6" title="Cistamusica music maker" allow="autoplay" loading="eager"></iframe>
+      <iframe class="music-frame" src="./music.html?v=7" title="Cistamusica music maker" allow="autoplay" loading="eager"></iframe>
     </div>`;
   $("#windows").appendChild(win);
   state.windows.set("music", { element: win, title: "Cistamusica", glyph: "♫" });
@@ -987,13 +988,11 @@ function restoreOpenWindows() {
     const win = record.element;
     if (item.maximized) {
       win.classList.add("is-maximized");
-      if (item.app === "podcast") {
-        win.style.left = "0";
-        win.style.top = "0";
-        win.style.width = "100%";
-        win.style.height = "100%";
-      }
-    } else if (item.app === "podcast" || item.app === "music") {
+      win.style.left = "0";
+      win.style.top = "0";
+      win.style.width = "100%";
+      win.style.height = "100%";
+    } else {
       win.classList.remove("is-maximized");
       if (item.left) win.style.left = item.left;
       if (item.top) win.style.top = item.top;
