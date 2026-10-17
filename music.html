@@ -32,6 +32,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
   let notes = cloneNotes(parts[0].notes);
   let noteColor = "#cdb9e9", audio = null, playing = false, timer = null, step = 0, nextTime = 0;
   let selectedNote = null;
+  let undoStack = [];
   let oscillators = new Set();
   const PROJECT_KEY = "cistamusica-project";
   const setStatus = message => { status.textContent = message; };
@@ -91,6 +92,16 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
     oscillators.add(osc);
     osc.onended = () => oscillators.delete(osc);
     osc.start(when); osc.stop(when + duration + 0.03);
+  }
+  function saveUndo() { undoStack.push({part: currentPart, notes: cloneNotes(notes)}); if (undoStack.length > 100) undoStack.shift(); }
+  function undo() {
+    const previous = undoStack.pop();
+    if (!previous) { setStatus("Nothing to undo yet."); return; }
+    currentPart = Math.min(previous.part, parts.length - 1);
+    notes = cloneNotes(previous.notes);
+    selectedNote = null;
+    syncPart(); render(); renderTimeline(); persistProject();
+    setStatus("Undid the last note edit.");
   }
   function syncPart() {
     if (parts[currentPart]) parts[currentPart].notes = cloneNotes(notes);
@@ -198,6 +209,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
         button.setAttribute("aria-pressed", String(notes[rowIndex][col]));
         button.setAttribute("aria-label", row.name + ", step " + (col + 1));
         button.addEventListener("click", event => {
+          saveUndo();
           if (event.shiftKey && selectedNote && selectedNote.row === rowIndex && notes[rowIndex][selectedNote.col]) {
             const start = Math.min(selectedNote.col, col);
             const end = Math.max(selectedNote.col, col);
@@ -331,6 +343,10 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
     parts[currentPart].name = name.trim().slice(0, 32); renderTimeline(); setStatus("Renamed part to " + parts[currentPart].name + ".");
   });
   document.addEventListener("keydown", event => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+      if (event.target && (event.target.matches("input, textarea, select") || event.target.isContentEditable)) return;
+      event.preventDefault(); undo(); return;
+    }
     if (!selectedNote || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
     if (event.target && (event.target.matches("input, textarea, select") || event.target.isContentEditable)) return;
     const rowIndex = selectedNote.row, start = selectedNote.col;
@@ -340,7 +356,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
     while (end + 1 < 16 && line[end + 1]) end++;
     if (event.key === "ArrowRight") {
       if (end < 15 && !line[end + 1]) {
-        line[end + 1] = true;
+        saveUndo(); line[end + 1] = true;
         event.preventDefault();
         setStatus("Lengthened note to " + (end + 2) + " steps. Use ← / → to adjust its length.");
       } else return;
@@ -349,7 +365,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
         setStatus("This note is already at its shortest length.");
         return;
       }
-      line[end] = false;
+      saveUndo(); line[end] = false;
       event.preventDefault();
       setStatus("Shortened note to " + (end - start) + " step" + (end - start === 1 ? "" : "s") + ".");
     }
@@ -359,9 +375,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
   });
   $("play").addEventListener("click", play);
   $("stop").addEventListener("click", stop);
-  $("clear").addEventListener("click", () => { stop(); notes = blankNotes(); syncPart(); render(); renderTimeline(); setStatus("Grid cleared for " + parts[currentPart].name + "."); });
+  $("clear").addEventListener("click", () => { saveUndo(); stop(); notes = blankNotes(); syncPart(); render(); renderTimeline(); setStatus("Grid cleared for " + parts[currentPart].name + "."); });
   $("random").addEventListener("click", () => {
-    stop(); notes = Array.from({length:8}, () => Array.from({length:16}, () => Math.random() < 0.16));
+    saveUndo(); stop(); notes = Array.from({length:8}, () => Array.from({length:16}, () => Math.random() < 0.16));
     syncPart(); render(); renderTimeline(); setStatus("A new little idea appeared in " + parts[currentPart].name + "!");
   });
   $("pattern").addEventListener("change", event => { stop(); preset(event.target.value); });
