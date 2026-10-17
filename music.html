@@ -27,7 +27,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
   if (!grid || !status || !progress || !saved) return;
   const blankNotes = () => Array.from({length:8}, () => Array(16).fill(false));
   const cloneNotes = value => value.map(line => line.slice());
-  let parts = [{name:"Part A", notes:blankNotes(), instrument:"square", arrangement:Array.from({length:16}, (_,i)=>i===0)}];
+  let parts = [{name:"Part A", notes:blankNotes(), instrument:"square", arrangement:Array(16).fill(true)}];
   let currentPart = 0;
   let notes = cloneNotes(parts[0].notes);
   let noteColor = "#cdb9e9", audio = null, playing = false, timer = null, step = 0, nextTime = 0;
@@ -309,7 +309,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
     if (parts.length >= 12) { setStatus("You can have up to 12 song parts."); return; }
     syncPart();
     const letter = String.fromCharCode(65 + parts.length);
-    parts.push({name:"Part " + letter, notes:blankNotes(), instrument:$("instrument").value, arrangement:Array.from({length:16}, (_,i)=>i===0)});
+    parts.push({name:"Part " + letter, notes:blankNotes(), instrument:$("instrument").value, arrangement:Array(16).fill(true)});
     currentPart = parts.length - 1; notes = cloneNotes(parts[currentPart].notes);
     render(); renderTimeline(); setStatus("Added a blank " + parts[currentPart].name + ".");
   });
