@@ -17,21 +17,176 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
 <aside class="side"><section class="card"><h3>Note colour</h3><div class="swatches" id="swatches"><button class="swatch active" data-color="#cdb9e9" style="background:#cdb9e9" aria-label="Lilac"></button><button class="swatch" data-color="#b9dccc" style="background:#b9dccc" aria-label="Mint"></button><button class="swatch" data-color="#f0bfd5" style="background:#f0bfd5" aria-label="Rose"></button><button class="swatch" data-color="#f2dda0" style="background:#f2dda0" aria-label="Butter"></button></div><p class="hint">Just for organizing your notes — the sound stays the same.</p></section><section class="card"><h3>Your saved loops</h3><div id="saved" class="pattern-list"></div><p class="hint">Save a pattern to keep it here. Loading one replaces the current grid.</p></section><section class="card"><h3>Quick actions</h3><div style="display:grid;gap:7px"><button id="clear">Clear grid</button><button id="random">Surprise me ✨</button></div></section></aside></main><p class="foot">Cistamusica is an original LunaOS music toy. No account or uploads needed.</p>
 <script>
 (() => {
-const rows=[{name:"C5",hz:523.25},{name:"B4",hz:493.88},{name:"A4",hz:440},{name:"G4",hz:392},{name:"F4",hz:349.23},{name:"E4",hz:329.63},{name:"D4",hz:293.66},{name:"C4",hz:261.63}];
-const gridEl=document.getElementById("grid"),status=document.getElementById("status"),progress=document.getElementById("progress"),savedEl=document.getElementById("saved");
-let notes=Array.from({length:8},()=>Array(16).fill(false)),color="#cdb9e9",audio=null,playing=false,timer=null,step=0,nextTime=0,activeOscillators=new Set();
-function setStatus(s){status.textContent=s}
-function render(){gridEl.innerHTML="";const corner=document.createElement("div");corner.className="corner";corner.textContent="NOTE";gridEl.append(corner);for(let c=0;c<16;c++){const n=document.createElement("div");n.className="step-number"+(c%4===0?" bar":"");n.textContent=c+1;gridEl.append(n)}rows.forEach((row,r)=>{const label=document.createElement("div");label.className="note-label";label.textContent=row.name;gridEl.append(label);for(let c=0;c<16;c++){const b=document.createElement("button");b.className="cell"+(notes[r][c]?" on":"")+(c%4===0?" bar-start":"");b.style.setProperty("--note-color",color);b.setAttribute("role","gridcell");b.setAttribute("aria-label",row.name+", step "+(c+1)+(notes[r][c]?", active":", empty"));b.setAttribute("aria-pressed",String(notes[r][c]));b.addEventListener("click",()=>{notes[r][c]=!notes[r][c];b.classList.toggle("on",notes[r][c]);b.setAttribute("aria-pressed",String(notes[r][c]));b.setAttribute("aria-label",row.name+", step "+(c+1)+(notes[r][c]?", active":", empty"));if(notes[r][c])playNote(row.hz,audio?audio.currentTime:0,.16)});gridEl.append(b)}}}
-function ensureAudio(){if(!audio){const AC=window.AudioContext||window.webkitAudioContext;if(!AC){setStatus("Audio is not supported in this browser.");return false}audio=new AC()}if(audio.state==="suspended")audio.resume();return true}
-function playNote(freq,when,duration){if(!ensureAudio())return;const osc=audio.createOscillator(),gain=audio.createGain();osc.type=document.getElementById("instrument").value;osc.frequency.value=freq;gain.gain.setValueAtTime(.0001,when);gain.gain.exponentialRampToValueAtTime(.18,when+.015);gain.gain.exponentialRampToValueAtTime(.0001,when+duration);osc.connect(gain);gain.connect(audio.destination);activeOscillators.add(osc);osc.onended=()=>activeOscillators.delete(osc);osc.start(when);osc.stop(when+duration+.03)}
-function tick(){if(!playing||!ensureAudio())return;const tempo=Math.max(50,Math.min(180,Number(document.getElementById("tempo").value)||110)),interval=60/tempo/4;while(nextTime<audio.currentTime+.12){for(let r=0;r<8;r++)if(notes[r][step])playNote(rows[r].hz,nextTime,interval*.88);const current=step;setTimeout(()=>{if(playing){progress.style.width=((current+1)/16*100)+"%";gridEl.querySelectorAll(".step-number").forEach((n,i)=>n.style.background=i===current?"#eee5fa":"transparent")}},Math.max(0,(nextTime-audio.currentTime)*1000));step=(step+1)%16;nextTime+=interval}timer=setTimeout(tick,25)}
-function play(){if(playing){stop();return}if(!ensureAudio())return;playing=true;step=0;nextTime=audio.currentTime;document.getElementById("play").textContent="Ⅱ Pause";setStatus("Playing your loop…");tick()}
-function stop(){playing=false;clearTimeout(timer);timer=null;document.getElementById("play").textContent="▶ Play";progress.style.width="0";gridEl.querySelectorAll(".step-number").forEach(n=>n.style.background="transparent");activeOscillators.forEach(o=>{try{o.stop()}catch(e){}});activeOscillators.clear();setStatus("Stopped. Your pattern is still here.")}
-function loadPreset(name){notes=Array.from({length:8},()=>Array(16).fill(false));if(name==="chill"){[[7,0],[5,4],[3,8],[6,12],[0,3],[2,7],[1,11],[4,15]].forEach(([r,c])=>notes[r][c]=true)}if(name==="sparkle"){[0,2,4,7,9,11,13,15].forEach((c,i)=>notes[i%4][c]=true);[3,7,11,15].forEach(c=>notes[6][c]=true)}if(name==="bounce"){[0,4,8,12].forEach(c=>notes[7][c]=true);[2,6,10,14].forEach(c=>notes[3][c]=true);[4,12].forEach(c=>notes[0][c]=true)}render();setStatus(name==="blank"?"Empty grid ready.":"Loaded the "+name+" starter pattern.")}
-function getSaved(){try{return JSON.parse(localStorage.getItem("moonloop-patterns")||"[]")}catch(e){return[]}}
-function renderSaved(){savedEl.innerHTML="";const all=getSaved();if(!all.length){savedEl.innerHTML='<p class="hint">No saved patterns yet.</p>';return}all.forEach((item,i)=>{const b=document.createElement("button");b.textContent="♫ "+item.name;b.title="Load "+item.name;b.addEventListener("click",()=>{stop();notes=item.notes.map(r=>r.slice());document.getElementById("tempo").value=item.tempo||110;render();setStatus("Loaded "+item.name)});const del=document.createElement("button");del.textContent="×";del.title="Delete "+item.name;del.style.float="right";del.addEventListener("click",()=>{const list=getSaved();list.splice(i,1);localStorage.setItem("moonloop-patterns",JSON.stringify(list));renderSaved()});b.appendChild(del);savedEl.append(b)})}
-document.getElementById("play").addEventListener("click",play);document.getElementById("stop").addEventListener("click",stop);document.getElementById("clear").addEventListener("click",()=>{stop();notes=Array.from({length:8},()=>Array(16).fill(false));render();setStatus("Grid cleared.")});document.getElementById("random").addEventListener("click",()=>{stop();notes=Array.from({length:8},()=>Array.from({length:16},()=>Math.random()<.16));render();setStatus("A new little idea appeared ✨")});document.getElementById("pattern").addEventListener("change",e=>{stop();loadPreset(e.target.value)});document.getElementById("swatches").addEventListener("click",e=>{const b=e.target.closest("[data-color]");if(!b)return;color=b.dataset.color;document.querySelectorAll(".swatch").forEach(s=>s.classList.toggle("active",s===b));render()});document.getElementById("save").addEventListener("click",()=>{const name=prompt("Name this loop:","Moonloop "+(getSaved().length+1));if(!name||!name.trim())return;const all=getSaved();all.unshift({name:name.trim().slice(0,50),notes:notes.map(r=>r.slice()),tempo:Number(document.getElementById("tempo").value)||110});try{localStorage.setItem("moonloop-patterns",JSON.stringify(all.slice(0,30)));renderSaved();setStatus("Saved “"+name.trim()+"”.")}catch(e){setStatus("Couldn't save. Browser storage may be full.")}});document.getElementById("export").addEventListener("click",async()=>{if(!ensureAudio())return;const button=document.getElementById("export");button.disabled=true;setStatus("Preparing WAV export…");try{const Offline=window.OfflineAudioContext||window.webkitOfflineAudioContext;if(!Offline)throw Error("Offline audio export is not supported here.");const tempo=Math.max(50,Math.min(180,Number(document.getElementById("tempo").value)||110)),dur=60/tempo/4,total=dur*16,ctx=new Offline(1,Math.ceil(44100*(total+.2)),44100);for(let c=0;c<16;c++)for(let r=0;r<8;r++)if(notes[r][c]){const o=ctx.createOscillator(),g=ctx.createGain();o.type=document.getElementById("instrument").value;o.frequency.value=rows[r].hz;const t=c*dur;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.18,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+dur*.88);o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+dur)}const buffer=await ctx.startRendering(),wav=encodeWav(buffer),url=URL.createObjectURL(new Blob([wav],{type:"audio/wav"})),a=document.createElement("a");a.href=url;a.download="moonloop-pattern.wav";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);setStatus("WAV exported!")}catch(e){setStatus(e.message||"Export failed.")}finally{button.disabled=false}});function encodeWav(buffer){const samples=buffer.getChannelData(0),out=new ArrayBuffer(44+samples.length*2),v=new DataView(out);function str(o,s){for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))}str(0,"RIFF");v.setUint32(4,36+samples.length*2,true);str(8,"WAVE");str(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,buffer.sampleRate,true);v.setUint32(28,buffer.sampleRate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);str(36,"data");v.setUint32(40,samples.length*2,true);let o=44;for(let i=0;i<samples.length;i++,o+=2){const s=Math.max(-1,Math.min(1,samples[i]));v.setInt16(o,s<0?s*32768:s*32767,true)}return out}
-document.addEventListener("visibilitychange",()=>{if(document.hidden)stop()});render();renderSaved();
+  "use strict";
+  const rows = [
+    {name:"C5", hz:523.25}, {name:"B4", hz:493.88},
+    {name:"A4", hz:440}, {name:"G4", hz:392},
+    {name:"F4", hz:349.23}, {name:"E4", hz:329.63},
+    {name:"D4", hz:293.66}, {name:"C4", hz:261.63}
+  ];
+  const $ = id => document.getElementById(id);
+  const grid = $("grid"), status = $("status"), progress = $("progress"), saved = $("saved");
+  if (!grid || !status || !progress || !saved) return;
+  let notes = Array.from({length:8}, () => Array(16).fill(false));
+  let noteColor = "#cdb9e9", audio = null, playing = false, timer = null, step = 0, nextTime = 0;
+  let oscillators = new Set();
+  const setStatus = message => { status.textContent = message; };
+  function ensureAudio() {
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) { setStatus("Audio is not supported in this browser."); return false; }
+      if (!audio) audio = new AudioContextClass();
+      if (audio.state === "suspended") audio.resume();
+      return true;
+    } catch (error) { setStatus("Couldn't start audio: " + error.message); return false; }
+  }
+  function playNote(freq, when, duration) {
+    if (!ensureAudio()) return;
+    const osc = audio.createOscillator(), gain = audio.createGain();
+    osc.type = $("instrument").value;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, when);
+    gain.gain.exponentialRampToValueAtTime(0.16, when + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, when + duration);
+    osc.connect(gain); gain.connect(audio.destination);
+    oscillators.add(osc);
+    osc.onended = () => oscillators.delete(osc);
+    osc.start(when); osc.stop(when + duration + 0.03);
+  }
+  function render() {
+    grid.replaceChildren();
+    const corner = document.createElement("div");
+    corner.className = "corner"; corner.textContent = "NOTE"; grid.appendChild(corner);
+    for (let col = 0; col < 16; col++) {
+      const number = document.createElement("div");
+      number.className = "step-number" + (col % 4 === 0 ? " bar" : "");
+      number.textContent = String(col + 1); grid.appendChild(number);
+    }
+    rows.forEach((row, rowIndex) => {
+      const label = document.createElement("div");
+      label.className = "note-label"; label.textContent = row.name; grid.appendChild(label);
+      for (let col = 0; col < 16; col++) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "cell" + (notes[rowIndex][col] ? " on" : "") + (col % 4 === 0 ? " bar-start" : "");
+        button.style.setProperty("--note-color", noteColor);
+        button.setAttribute("role", "gridcell");
+        button.setAttribute("aria-pressed", String(notes[rowIndex][col]));
+        button.setAttribute("aria-label", row.name + ", step " + (col + 1));
+        button.addEventListener("click", () => {
+          notes[rowIndex][col] = !notes[rowIndex][col];
+          button.classList.toggle("on", notes[rowIndex][col]);
+          button.setAttribute("aria-pressed", String(notes[rowIndex][col]));
+          if (notes[rowIndex][col] && ensureAudio()) playNote(row.hz, audio.currentTime, 0.16);
+        });
+        grid.appendChild(button);
+      }
+    });
+  }
+  function stop() {
+    playing = false; clearTimeout(timer); timer = null;
+    $("play").textContent = "▶ Play";
+    progress.style.width = "0";
+    grid.querySelectorAll(".step-number").forEach(el => { el.style.background = "transparent"; });
+    oscillators.forEach(osc => { try { osc.stop(); } catch (error) {} });
+    oscillators.clear();
+    setStatus("Stopped. Your pattern is still here.");
+  }
+  function tick() {
+    if (!playing || !ensureAudio()) return;
+    const tempo = Math.max(50, Math.min(180, Number($("tempo").value) || 110));
+    const interval = 60 / tempo / 4;
+    while (nextTime < audio.currentTime + 0.12) {
+      for (let row = 0; row < 8; row++) if (notes[row][step]) playNote(rows[row].hz, nextTime, interval * 0.88);
+      const current = step;
+      setTimeout(() => {
+        if (!playing) return;
+        progress.style.width = ((current + 1) / 16 * 100) + "%";
+        grid.querySelectorAll(".step-number").forEach((el, index) => {
+          el.style.background = index === current ? "#eee5fa" : "transparent";
+        });
+      }, Math.max(0, (nextTime - audio.currentTime) * 1000));
+      step = (step + 1) % 16; nextTime += interval;
+    }
+    timer = setTimeout(tick, 25);
+  }
+  function play() {
+    if (playing) { stop(); return; }
+    if (!ensureAudio()) return;
+    playing = true; step = 0; nextTime = audio.currentTime;
+    $("play").textContent = "Ⅱ Pause"; setStatus("Playing your loop…"); tick();
+  }
+  function preset(name) {
+    notes = Array.from({length:8}, () => Array(16).fill(false));
+    if (name === "chill") [[7,0],[5,4],[3,8],[6,12],[0,3],[2,7],[1,11],[4,15]].forEach(([r,c]) => notes[r][c] = true);
+    if (name === "sparkle") {
+      [0,2,4,7,9,11,13,15].forEach((c,i) => notes[i % 4][c] = true);
+      [3,7,11,15].forEach(c => notes[6][c] = true);
+    }
+    if (name === "bounce") {
+      [0,4,8,12].forEach(c => notes[7][c] = true);
+      [2,6,10,14].forEach(c => notes[3][c] = true);
+      [4,12].forEach(c => notes[0][c] = true);
+    }
+    render(); setStatus(name === "blank" ? "Empty grid ready." : "Loaded the " + name + " starter pattern.");
+  }
+  function getSaved() {
+    try { return JSON.parse(localStorage.getItem("cistamusica-patterns") || "[]"); }
+    catch (error) { return []; }
+  }
+  function renderSaved() {
+    saved.replaceChildren();
+    const patterns = getSaved();
+    if (!patterns.length) {
+      const hint = document.createElement("p"); hint.className = "hint";
+      hint.textContent = "No saved patterns yet."; saved.appendChild(hint); return;
+    }
+    patterns.forEach((pattern, index) => {
+      const row = document.createElement("div");
+      const load = document.createElement("button");
+      load.type = "button"; load.textContent = "♫ " + pattern.name;
+      load.addEventListener("click", () => {
+        stop(); notes = pattern.notes.map(line => line.slice());
+        $("tempo").value = pattern.tempo || 110; render(); setStatus("Loaded " + pattern.name + ".");
+      });
+      const remove = document.createElement("button");
+      remove.type = "button"; remove.textContent = "×"; remove.title = "Delete " + pattern.name;
+      remove.addEventListener("click", () => {
+        const list = getSaved(); list.splice(index, 1);
+        localStorage.setItem("cistamusica-patterns", JSON.stringify(list)); renderSaved();
+      });
+      row.append(load, remove); saved.appendChild(row);
+    });
+  }
+  $("play").addEventListener("click", play);
+  $("stop").addEventListener("click", stop);
+  $("clear").addEventListener("click", () => { stop(); notes = Array.from({length:8}, () => Array(16).fill(false)); render(); setStatus("Grid cleared."); });
+  $("random").addEventListener("click", () => {
+    stop(); notes = Array.from({length:8}, () => Array.from({length:16}, () => Math.random() < 0.16));
+    render(); setStatus("A new little idea appeared!");
+  });
+  $("pattern").addEventListener("change", event => { stop(); preset(event.target.value); });
+  $("swatches").addEventListener("click", event => {
+    const swatch = event.target.closest("[data-color]"); if (!swatch) return;
+    noteColor = swatch.dataset.color;
+    document.querySelectorAll(".swatch").forEach(el => el.classList.toggle("active", el === swatch));
+    render();
+  });
+  $("save").addEventListener("click", () => {
+    const name = window.prompt("Name this loop:", "Cistamusica " + (getSaved().length + 1));
+    if (!name || !name.trim()) return;
+    try {
+      const list = getSaved();
+      list.unshift({name:name.trim().slice(0,50), notes:notes.map(line => line.slice()), tempo:Number($("tempo").value) || 110});
+      localStorage.setItem("cistamusica-patterns", JSON.stringify(list.slice(0,30)));
+      renderSaved(); setStatus("Saved " + name.trim() + ".");
+    } catch (error) { setStatus("Couldn't save. Browser storage may be full."); }
+  });
+  $("export").addEventListener("click", () => {
+    setStatus("WAV export is temporarily unavailable; use the Play button to hear your loop.");
+  });
+  document.addEventListener("visibilitychange", () => { if (document.hidden && playing) stop(); });
+  render(); renderSaved();
 })();
 </script>
 </body>
