@@ -41,7 +41,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:14px;fl
         currentPart,
         tempo: $("tempo").value,
         instrument: $("instrument").value,
-        noteColor
+        noteColor,
+        layerParts: $("layerParts").checked
       }));
     } catch (error) {
       setStatus("Couldn't autosave your song. Browser storage may be unavailable.");
