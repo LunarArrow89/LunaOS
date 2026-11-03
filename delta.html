@@ -851,7 +851,14 @@ gather(key)
 print(key)</pre>
         <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="ask(&quot;Press any key&quot;)&#10;gather(key)&#10;print(key)">Copy</button><button class="quiet-button use-example" data-example="ask(&quot;Press any key&quot;)&#10;gather(key)&#10;print(key)">Try in editor</button></div>
 
-        <h3>10. Clear the screen</h3>
+        <h3>10. Wait / pause</h3>
+        <p class="help-intro"><code>wait(hours, minutes, seconds)</code> pauses the program before running the next command. The <code>wait</code> command is hot pink in the editor. Minutes and seconds must be from 0 to 59.</p>
+        <pre>print("Starting...")
+wait(0, 0, 5)
+print("Five seconds later!")</pre>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="print(&quot;Starting...&quot;)&#10;wait(0, 0, 5)&#10;print(&quot;Five seconds later!&quot;)">Copy</button><button class="quiet-button use-example" data-example="print(&quot;Starting...&quot;)&#10;wait(0, 0, 5)&#10;print(&quot;Five seconds later!&quot;)">Try in editor</button></div>
+
+        <h3>11. Clear the screen</h3>
         <p class="help-intro">Use <code>clear()</code> to remove every shape and text object from the current scene.</p>
         <pre>screen(640, 400)
 background("#10131c")
@@ -1053,7 +1060,7 @@ function renderHighlights() {
     const code = commentAt >= 0 ? line.slice(0, commentAt) : line;
     const comment = commentAt >= 0 ? line.slice(commentAt) : "";
     let out = "";
-    const pattern = /:([^:]*):|\/([A-Za-z_][A-Za-z0-9_]*)\/|\b(screen|background)\b|\b(square|triangle|rect|circle|text)\b|\b(movement|location|size|color|speed)\b|\b(let)(\s+)([A-Za-z_][A-Za-z0-9_]*)?|"[^"]*"|'[^']*'/g;
+    const pattern = /:([^:]*):|\/([A-Za-z_][A-Za-z0-9_]*)\/|\b(screen|background|wait)\b|\b(square|triangle|rect|circle|text)\b|\b(movement|location|size|color|speed)\b|\b(let)(\s+)([A-Za-z_][A-Za-z0-9_]*)?|"[^"]*"|'[^']*'/g;
     let lastIndex = 0;
     let match;
     while ((match = pattern.exec(code)) !== null) {
@@ -1262,6 +1269,37 @@ class DeltaParser {
     if (inBlock) this.expect("}");
   }
   statement() {
+    if (this.match("wait")) {
+      this.expect("(");
+      const hours = Number(this.expression());
+      this.expect(",");
+      const minutes = Number(this.expression());
+      this.expect(",");
+      const seconds = Number(this.expression());
+      this.expect(")");
+      if (![hours, minutes, seconds].every(Number.isFinite) || hours < 0 || minutes < 0 || seconds < 0) {
+        throw new Error("wait(hours, minutes, seconds) needs non-negative numbers.");
+      }
+      if (minutes >= 60 || seconds >= 60) {
+        throw new Error("For wait(...), minutes and seconds must be less than 60.");
+      }
+      const duration = Math.round((hours * 3600 + minutes * 60 + seconds) * 1000);
+      if (duration > 86400000) throw new Error("A single wait command can be at most 24 hours.");
+      const parser = this;
+      throw { deltaWaitingForTime: true, resume() {
+        runStatus.textContent = "Waiting…";
+        setTimeout(() => {
+          try {
+            parser.statements(false);
+            addOutput("✓ Finished", "success");
+            runStatus.textContent = "Finished";
+          } catch (error) {
+            if (error?.deltaWaitingForTime || error?.deltaWaitingForKey) error.resume();
+            else { addOutput("Error: " + error.message, "error"); runStatus.textContent = "Error"; }
+          }
+        }, duration);
+      } };
+    }
     if (this.match("gather")) {
       this.expect("(");
       const keyName = this.identifier();
@@ -1677,7 +1715,7 @@ function runCode() {
     addOutput("✓ Finished in " + Math.round(performance.now() - started) + " ms", "success");
     runStatus.textContent = "Finished";
   } catch (error) {
-    if (error?.deltaWaitingForKey) { error.resume(); return; }
+    if (error?.deltaWaitingForKey || error?.deltaWaitingForTime) { error.resume(); return; }
     addOutput("Error: " + error.message, "error");
     runStatus.textContent = "Error";
   }
