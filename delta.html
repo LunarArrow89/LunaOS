@@ -561,7 +561,7 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 .object-map-label { display:flex; justify-content:space-between; margin-bottom:8px; color:var(--muted); font-size:10px; font-weight:800; letter-spacing:1px; }
 .object-map { position:relative; width:100%; aspect-ratio:640 / 400; max-height:520px; overflow:hidden; container-type:size; background:#000000; background-image:none; border:1px solid #53596b; border-radius:2px; box-shadow:0 0 0 1px #000, 0 8px 24px #0005; touch-action:none; }
 .map-hint { position:absolute; inset:0; display:grid; place-items:center; padding:16px; text-align:center; color:#8e95a8; font-size:13px; pointer-events:none; }
-.map-text-object { position:absolute; transform:none; padding:0; margin:0; max-width:95%; overflow-wrap:anywhere; white-space:pre-wrap; background:transparent; border:1px dashed transparent; border-radius:0; font-family:system-ui,sans-serif; font-weight:400; line-height:normal; text-align:left; touch-action:none; cursor:move; }
+.map-text-object { position:absolute; transform:none; padding:0; margin:0; max-width:none; width:max-content; overflow-wrap:normal; word-break:normal; white-space:pre; background:transparent; border:1px dashed transparent; border-radius:0; font-family:system-ui,sans-serif; font-weight:400; line-height:normal; text-align:left; touch-action:none; cursor:move; }
 .map-text-object.selected { border-color:var(--accent); background:#9c8cff22; outline:1px solid #9c8cff44; }
 .object-properties { display:flex; flex-direction:column; gap:7px; min-width:0; }
 .object-properties label { color:#aeb5c6; font-size:11px; font-weight:700; }
@@ -2021,7 +2021,7 @@ addFileButton.addEventListener("click", () => {
   heightInput.addEventListener("change",applyScreenDimensions);
   function selected() { return objects.find(item => item.id === selectedId); }
   function renderObjects() {
-    map.querySelectorAll(".map-text-object").forEach(el => el.remove());
+    map.querySelectorAll(".map-text-object, .map-shape-object").forEach(el => el.remove());
     const size = screenSize();
     for (const item of objects) {
       const el = document.createElement("button");
@@ -2105,8 +2105,8 @@ addFileButton.addEventListener("click", () => {
     const size = screenSize();
     item.name = fields.name.value.trim() || "Text " + item.id;
     item.text = fields.text.value;
-    item.x = Math.max(0, Math.min(size.width, Number(fields.x.value) || 0));
-    item.y = Math.max(0, Math.min(size.height, Number(fields.y.value) || 0));
+    item.x = Number(fields.x.value) || 0;
+    item.y = Number(fields.y.value) || 0;
     item.size = Math.max(8, Math.min(120, Number(fields.size.value) || 24));
     item.color = fields.color.value || "#ffffff";
     fields.x.value = Math.round(item.x);
@@ -2124,7 +2124,7 @@ addFileButton.addEventListener("click", () => {
   }
   function objectCode(item) {
     const n=JSON.stringify(String(item.name||item.type+" "+item.id).trim()), c=JSON.stringify(item.color||"#ffffff");
-    if(item.type==="text"){const t=String(item.text||"").replace(/:/g,"：").replace(/[\r\n]+/g," ");return "text(:"+t+': "color: '+item.color+", size: "+item.size+", x: "+Math.round(item.x)+", y: "+Math.round(item.y)+', name: '+n+'":)';}
+    if(item.type==="text"){const t=String(item.text||"").replace(/:/g,"：");return "text(:"+t+': "color: '+item.color+", size: "+item.size+", x: "+Math.round(item.x)+", y: "+Math.round(item.y)+', name: '+n+'":)';}
     if(item.type==="square")return "square("+[Math.round(item.x),Math.round(item.y),item.size,c,n].join(", ")+")";
     if(item.type==="rect")return "rect("+[Math.round(item.x),Math.round(item.y),item.width,item.height,c,n].join(", ")+")";
     if(item.type==="circle")return "circle("+[Math.round(item.x),Math.round(item.y),item.radius,c,n].join(", ")+")";
@@ -2133,8 +2133,8 @@ addFileButton.addEventListener("click", () => {
   function addAt(clientX, clientY) {
     const rect = map.getBoundingClientRect();
     const size = screenSize();
-    const x = Math.max(0, Math.min(size.width, (clientX - rect.left) / rect.width * size.width));
-    const y = Math.max(0, Math.min(size.height, (clientY - rect.top) / rect.height * size.height));
+    const x = (clientX - rect.left) / rect.width * size.width;
+    const y = (clientY - rect.top) / rect.height * size.height;
     const id = nextId++;
     const item = { id, name: (fields.name.value.trim() && fields.name.value.trim() !== "Text 1" ? fields.name.value.trim() : "Text " + id), text: fields.text.value || "Text", x, y, size: Math.max(8, Number(fields.size.value) || 24), color: fields.color.value || "#ffffff" };
     objects.push(item); selectedId = item.id; syncFields(); renderObjects();
@@ -2199,8 +2199,8 @@ addFileButton.addEventListener("click", () => {
     const item = objects.find(entry => entry.id === drag.id);
     if (!item) return;
     const size = screenSize();
-    item.x = Math.max(0, Math.min(size.width, drag.x + (event.clientX - drag.startX) / drag.rect.width * size.width));
-    item.y = Math.max(0, Math.min(size.height, drag.y + (event.clientY - drag.startY) / drag.rect.height * size.height));
+    item.x = drag.x + (event.clientX - drag.startX) / drag.rect.width * size.width;
+    item.y = drag.y + (event.clientY - drag.startY) / drag.rect.height * size.height;
     fields.x.value = Math.round(item.x);
     fields.y.value = Math.round(item.y);
     renderObjects();
