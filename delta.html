@@ -607,6 +607,7 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 .stage-dot { display:inline-block; width:7px; height:7px; margin-right:5px; border-radius:50%; background:#9b83ff; }
 .object-map-wrap { width:100%; margin:auto 0; }
 .object-map { max-height:580px; background-color:#151925; background-image:linear-gradient(#373d4d55 1px,transparent 1px),linear-gradient(90deg,#373d4d55 1px,transparent 1px); background-size:5% 5%; border:1px solid #464d60; border-radius:3px; box-shadow:0 8px 24px #0003; }
+.screen-dimension{display:flex;align-items:center;gap:4px;color:#aeb5c6;font-size:10px}.screen-dimension input{width:54px;padding:5px;color:var(--text);background:#191c24;border:1px solid #3a4050;border-radius:5px}.shape-tools{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.shape-tool{padding:8px 4px;border:1px solid #3a4050;border-radius:6px;background:#191c24;color:#e8eaf2;font-size:11px;cursor:pointer}.shape-tool:hover{border-color:#9b83ff}.map-shape-object{position:absolute;transform:translate(-50%,-50%);padding:0;min-width:0;min-height:0;cursor:move;user-select:none}.map-shape-object.selected{outline:1px dashed #9b83ff;outline-offset:3px}.map-shape-object.circle{border-radius:50%}
 .object-map.drop-target { outline:2px solid #9c83ff; outline-offset:3px; background-color:#1e2031; }
 .map-hint { color:#737d94; font-size:12px; }
 .map-text-object { cursor:move; user-select:none; }
@@ -886,11 +887,12 @@ clear()</pre>
   <section class="object-editor" aria-label="Delta map editor">
     <div class="object-editor-heading">
       <div><span class="status-dot"></span> <strong>DELTA- MAP EDITOR</strong><p>Drag Text onto your map, then move and customize it.</p></div>
-      <div class="maker-toolbar"><span id="mapSizeLabel">640 × 400</span><button id="insertObjectCode" class="run-button" type="button">Insert into code</button></div>
+      <div class="maker-toolbar"><label class="screen-dimension">W <input id="mapWidth" type="number" min="1" max="4096" value="640"></label><label class="screen-dimension">H <input id="mapHeight" type="number" min="1" max="4096" value="400"></label><span id="mapSizeLabel">640 × 400</span><button id="insertObjectCode" class="run-button" type="button">Insert into code</button></div>
     </div>
     <div class="maker-workspace">
       <aside class="maker-sidebar maker-palette">
         <div class="maker-panel-title">OBJECTS</div>
+        <div class="shape-tools"><button type="button" class="shape-tool" data-shape="square">□ Square</button><button type="button" class="shape-tool" data-shape="rect">▭ Rectangle</button><button type="button" class="shape-tool" data-shape="circle">○ Circle</button><button type="button" class="shape-tool" data-shape="triangle">△ Triangle</button></div>
         <div id="textObjectTool" class="object-tool" draggable="true" role="button" tabindex="0" aria-label="Drag Text object onto the map"><span class="text-tool-icon">T</span><span><strong>Text</strong><small>Display text on screen</small></span><span class="tool-grip">⠿</span></div>
         <p class="palette-tip">Drag Text onto the map, or click it to add one.</p>
         <div class="maker-panel-title object-list-title">SCENE OBJECTS</div>
@@ -1992,18 +1994,31 @@ addFileButton.addEventListener("click", () => {
   let selectedId = null;
   let nextId = 1;
   let drag = null;
+  const widthInput = document.getElementById("mapWidth");
+  const heightInput = document.getElementById("mapHeight");
   const screenSize = () => {
-    const screenLine = editor.value.match(/^\s*screen\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/m);
-    return { width: Number(screenLine?.[1]) || 640, height: Number(screenLine?.[2]) || 400 };
+    const m = editor.value.match(/^\s*screen\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/m);
+    return {width:Number(m?.[1])||640,height:Number(m?.[2])||400};
   };
   function updateMapSize() {
-    const size = screenSize();
-    sizeLabel.textContent = size.width + " × " + size.height;
-    map.style.aspectRatio = size.width + " / " + size.height;
-    map.style.setProperty("--map-width", size.width);
-    map.style.setProperty("--map-height", size.height);
+    const z=screenSize();
+    widthInput.value=z.width; heightInput.value=z.height;
+    sizeLabel.textContent=z.width+" × "+z.height;
+    map.style.aspectRatio=z.width+" / "+z.height;
+    map.style.maxHeight="none";
     renderObjects();
   }
+  function applyScreenDimensions() {
+    const w=Math.max(1,Math.min(4096,Number(widthInput.value)||640));
+    const h=Math.max(1,Math.min(4096,Number(heightInput.value)||400));
+    const re=/^([ \t]*)screen\s*\(\s*\d+\s*,\s*\d+\s*\)[ \t]*$/m;
+    if(re.test(editor.value)) editor.value=editor.value.replace(re,(_,indent)=>indent+"screen("+w+", "+h+")");
+    else editor.value="screen("+w+", "+h+")\n"+editor.value;
+    editor.dispatchEvent(new Event("input",{bubbles:true}));
+    updateMapSize(); saveActiveFile(); saveCurrentProject();
+  }
+  widthInput.addEventListener("change",applyScreenDimensions);
+  heightInput.addEventListener("change",applyScreenDimensions);
   function selected() { return objects.find(item => item.id === selectedId); }
   function renderObjects() {
     map.querySelectorAll(".map-text-object").forEach(el => el.remove());
@@ -2011,13 +2026,16 @@ addFileButton.addEventListener("click", () => {
     for (const item of objects) {
       const el = document.createElement("button");
       el.type = "button";
-      el.className = "map-text-object" + (item.id === selectedId ? " selected" : "");
-      el.textContent = item.text || " ";
-      el.title = item.name || "Text";
+      el.className = (item.type === "text" ? "map-text-object" : "map-shape-object " + item.type) + (item.id === selectedId ? " selected" : "");
+      el.textContent = item.type === "text" ? (item.text || " ") : "";
+      el.title = item.name || item.type || "Text";
       el.style.left = (item.x / size.width * 100) + "%";
       el.style.top = (item.y / size.height * 100) + "%";
-      el.style.color = item.color;
-      el.style.fontSize = "clamp(8px, " + (item.size / size.height * 100) + "cqh, 42px)";
+      el.style.color = item.color || "#ffffff";
+      if(item.type === "text") el.style.fontSize = Math.max(8,item.size / size.height * 100) + "cqh";
+      else if(item.type === "circle"){el.style.width=(item.radius*2/size.width*100)+"%";el.style.aspectRatio="1";el.style.background=item.color;}
+      else if(item.type === "triangle"){el.style.width="0";el.style.height="0";el.style.borderLeft=(item.size/2/size.width*100)+"cqw solid transparent";el.style.borderRight=(item.size/2/size.width*100)+"cqw solid transparent";el.style.borderBottom=(item.size/size.height*100)+"cqh solid "+item.color;}
+      else {el.style.width=(item.width/size.width*100)+"%";el.style.height=(item.height/size.height*100)+"%";el.style.background=item.color;}
       el.dataset.objectId = item.id;
       el.addEventListener("pointerdown", event => {
         if (event.button !== 0) return;
@@ -2105,10 +2123,12 @@ addFileButton.addEventListener("click", () => {
     renderObjects();
   }
   function objectCode(item) {
-    const safeText = String(item.text || "").replace(/:/g, "：").replace(/[\r\n]+/g, " ");
-    const safeName = String(item.name || "Text " + item.id).replace(/[\r\n]+/g, " ").trim();
-    const properties = "color: " + item.color + ", size: " + item.size + ", x: " + Math.round(item.x) + ", y: " + Math.round(item.y) + ", name: " + JSON.stringify(safeName);
-    return "text(:" + safeText + ': "' + properties + '":)';
+    const n=JSON.stringify(String(item.name||item.type+" "+item.id).trim()), c=JSON.stringify(item.color||"#ffffff");
+    if(item.type==="text"){const t=String(item.text||"").replace(/:/g,"：").replace(/[\r\n]+/g," ");return "text(:"+t+': "color: '+item.color+", size: "+item.size+", x: "+Math.round(item.x)+", y: "+Math.round(item.y)+', name: '+n+'":)';}
+    if(item.type==="square")return "square("+[Math.round(item.x),Math.round(item.y),item.size,c,n].join(", ")+")";
+    if(item.type==="rect")return "rect("+[Math.round(item.x),Math.round(item.y),item.width,item.height,c,n].join(", ")+")";
+    if(item.type==="circle")return "circle("+[Math.round(item.x),Math.round(item.y),item.radius,c,n].join(", ")+")";
+    return "triangle("+[Math.round(item.x),Math.round(item.y),item.size,c,"3.5","null",n].join(", ")+")";
   }
   function addAt(clientX, clientY) {
     const rect = map.getBoundingClientRect();
@@ -2119,6 +2139,11 @@ addFileButton.addEventListener("click", () => {
     const item = { id, name: (fields.name.value.trim() && fields.name.value.trim() !== "Text 1" ? fields.name.value.trim() : "Text " + id), text: fields.text.value || "Text", x, y, size: Math.max(8, Number(fields.size.value) || 24), color: fields.color.value || "#ffffff" };
     objects.push(item); selectedId = item.id; syncFields(); renderObjects();
   }
+  document.querySelectorAll(".shape-tool").forEach(button=>button.addEventListener("click",()=>{
+    const type=button.dataset.shape,z=screenSize(),id=nextId++;
+    objects.push({id,type,name:type.charAt(0).toUpperCase()+type.slice(1)+" "+id,x:z.width/2,y:z.height/2,size:48,width:80,height:48,radius:24,color:"#ffffff"});
+    selectedId=id;syncFields();renderObjects();
+  }));
   textObjectTool.addEventListener("click", () => {
     const rect = map.getBoundingClientRect();
     addAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
