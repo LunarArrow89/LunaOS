@@ -832,7 +832,7 @@ text(:Hello, Delta!:)</pre>
         <pre>let score = 10
 score = score + 5
 text(:Score: + /score/)</pre>
-        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="let score = 10&#10;score = score + 5&#10;text(:Score: + /score/)">Copy</button><button class="quiet-button use-example" data-example="let score = 10&#10;score = score + 5&#10;print(score)">Try in editor</button></div>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="let score = 10&#10;score = score + 5&#10;text(:Score: + /score/)">Copy</button><button class="quiet-button use-example" data-example="let score = 10&#10;score = score + 5&#10;text(:Score: + /score/)">Try in editor</button></div>
 
         <h3>8. Make decisions</h3>
         <p class="help-intro">Use <code>if</code> and <code>else</code> with comparison operators to choose what text appears.</p>
@@ -842,21 +842,21 @@ if score >= 10 {
 } else {
   text(:Keep trying!:)
 }</pre>
-        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="let score = 15&#10;if score &gt;= 10 {&#10;  text(:You did it!:)&#10;} else {&#10;  text(:Keep trying!:)&#10;}">Copy</button><button class="quiet-button use-example" data-example="let score = 15&#10;if score &gt;= 10 {&#10;  print(&quot;You did it!&quot;)&#10;} else {&#10;  print(&quot;Keep trying!&quot;)&#10;}">Try in editor</button></div>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="let score = 15&#10;if score &gt;= 10 {&#10;  text(:You did it!:)&#10;} else {&#10;  text(:Keep trying!:)&#10;}">Copy</button><button class="quiet-button use-example" data-example="let score = 15&#10;if score &gt;= 10 {&#10;  text(:You did it!:)&#10;} else {&#10;  text(:Keep trying!:)&#10;}">Try in editor</button></div>
 
         <h3>9. Ask for a key</h3>
         <p class="help-intro">Use <code>gather(key)</code> to wait for a key press and store its name in a variable. The program must be running in its game window.</p>
         <pre>ask("Press any key")
 gather(key)
 text(:You pressed: + /key/)</pre>
-        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="ask(&quot;Press any key&quot;)&#10;gather(key)&#10;text(:You pressed: + /key/)">Copy</button><button class="quiet-button use-example" data-example="ask(&quot;Press any key&quot;)&#10;gather(key)&#10;print(key)">Try in editor</button></div>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="ask(&quot;Press any key&quot;)&#10;gather(key)&#10;text(:You pressed: + /key/)">Copy</button><button class="quiet-button use-example" data-example="ask(&quot;Press any key&quot;)&#10;gather(key)&#10;text(:You pressed: + /key/)">Try in editor</button></div>
 
         <h3>10. Wait / pause</h3>
         <p class="help-intro"><code>wait(hours, minutes, seconds)</code> pauses the program before running the next command. The <code>wait</code> command is hot pink in the editor. Minutes and seconds must be from 0 to 59.</p>
         <pre>text(:Starting...:)
 wait(0, 0, 5)
 text(:Five seconds later!:)</pre>
-        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="text(:Starting...:)&#10;wait(0, 0, 5)&#10;text(:Five seconds later!:)">Copy</button><button class="quiet-button use-example" data-example="print(&quot;Starting...&quot;)&#10;wait(0, 0, 5)&#10;print(&quot;Five seconds later!&quot;)">Try in editor</button></div>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="text(:Starting...:)&#10;wait(0, 0, 5)&#10;text(:Five seconds later!:)">Copy</button><button class="quiet-button use-example" data-example="text(:Starting...:)&#10;wait(0, 0, 5)&#10;text(:Five seconds later!:)">Try in editor</button></div>
 
         <h3>11. Clear the screen</h3>
         <p class="help-intro">Use <code>clear()</code> to remove every shape and text object from the current scene.</p>
