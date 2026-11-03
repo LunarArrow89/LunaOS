@@ -910,7 +910,7 @@ clear()</pre>
           <div class="inspector-object-type"><span class="text-tool-icon">T</span><div><strong>Text</strong><small>Text object</small></div></div>
           <label for="objectName">Object name</label><input id="objectName" value="Text 1" maxlength="40"><label for="objectText">Text content</label><input id="objectText" value="Hello, world!" maxlength="200">
           <div class="property-pair"><div><label for="objectX">X position</label><input id="objectX" type="number" min="0" value="100"></div><div><label for="objectY">Y position</label><input id="objectY" type="number" min="0" value="100"></div></div>
-          <div class="property-pair"><div><label for="objectFontSize">Font size</label><input id="objectFontSize" type="number" min="8" max="120" value="24"></div><div><label for="objectColor">Text color</label><input id="objectColor" type="color" value="#ffffff"></div></div>
+          <div class="property-pair"><div><label for="objectFontSize">Font size</label><input id="objectFontSize" type="number" min="1" max="120" value="24"></div><div><label for="objectColor">Text color</label><input id="objectColor" type="color" value="#ffffff"></div></div>
           <button id="applyObject" class="quiet-button" type="button">Apply changes</button><button id="removeObject" class="quiet-button remove-object-button" type="button">Delete object</button>
           <p class="object-editor-note">Text coordinates are measured in pixels from the top-left corner of the game screen.</p>
         </div>
@@ -1529,7 +1529,7 @@ class DeltaParser {
     if (name === "triangle") { const moving=args[5]!==undefined&&args[5]!==null; runtimeScene.push({type:"triangle",name:String(args[6]??""),x:Number(args[0])||0,y:Number(args[1])||0,size:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving,speed:Math.max(0,Number(args[4])||3.5),controls:moving?parseMovementControls(args[5]):defaultMovementControls()}); if(moving)startRuntimeMovement(); drawRuntimeScene(); return null; }
     if (name === "rect") { runtimeScene.push({type:"rect",name:String(args[5]??""),x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff"),moving:false,speed:0,controls:defaultMovementControls()}); drawRuntimeScene(); return null; }
     if (name === "circle") { runtimeScene.push({type:"circle",name:String(args[4]??""),x:Number(args[0])||0,y:Number(args[1])||0,radius:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving:false,speed:0,controls:defaultMovementControls()}); drawRuntimeScene(); return null; }
-    if (name === "drawText") { runtimeScene.push({type:"text",name:String(args[6]??""),value:String(args[0]??""),x:Number(args[1])||0,y:Number(args[2])||0,color:String(args[3]??"#ffffff"),size:Math.max(8,Number(args[4])||24),centered:Boolean(args[5])}); drawRuntimeScene(); return null; }
+    if (name === "drawText") { runtimeScene.push({type:"text",name:String(args[6]??""),value:String(args[0]??""),x:Number(args[1])||0,y:Number(args[2])||0,color:String(args[3]??"#ffffff"),size:Math.max(1,Number(args[4])||24),centered:Boolean(args[5])}); drawRuntimeScene(); return null; }
     if (name === "delete") { const objectName=String(args[0]??""); const before=runtimeScene.length; runtimeScene=runtimeScene.filter(object=>object.name!==objectName); if(runtimeScene.length===before) throw new Error('No object named "'+objectName+'" exists.'); drawRuntimeScene(); return null; }
 
     if (name === "clear") { runtimeScene=[]; drawRuntimeScene(); return null; }
@@ -1705,7 +1705,7 @@ function runCode() {
         const screenWidth = Number(screenMatch?.[1]) || 640, screenHeight = Number(screenMatch?.[2]) || 400;
         const x = hasX ? (Number(getProperty("x", "0")) || 0) : screenWidth / 2;
         const y = hasY ? (Number(getProperty("y", "0")) || 0) : screenHeight / 2;
-        const color = getProperty("color", "#ffffff"), size = Math.max(8, Number(getProperty("size", "24")) || 24);
+        const color = getProperty("color", "#ffffff"), size = Math.max(1, Number(getProperty("size", "24")) || 24);
         objectName = getProperty("name", objectName);
         const centered = !hasX && !hasY;
         const parts = message.match(/^(.*?)(?:\s*\+\s*\/([A-Za-z_][A-Za-z0-9_]*)\/)?\s*$/);
@@ -2036,7 +2036,7 @@ addFileButton.addEventListener("click", () => {
         el.style.display = "block";
         el.style.minWidth = "0";
         el.style.minHeight = "0";
-        el.style.fontSize = Math.max(8, item.size / size.height * map.clientHeight) + "px";
+        el.style.fontSize = Math.max(1, item.size / size.height * map.clientHeight) + "px";
         el.style.lineHeight = "1";
       }
       else if(item.type === "circle"){el.style.width=(item.radius*2/size.width*100)+"%";el.style.aspectRatio="1";el.style.background=item.color;}
@@ -2113,7 +2113,7 @@ addFileButton.addEventListener("click", () => {
     item.text = fields.text.value;
     item.x = Number(fields.x.value) || 0;
     item.y = Number(fields.y.value) || 0;
-    item.size = Math.max(8, Math.min(120, Number(fields.size.value) || 24));
+    item.size = Math.max(1, Math.min(120, Number(fields.size.value) || 24));
     item.color = fields.color.value || "#ffffff";
     fields.x.value = Math.round(item.x);
     fields.y.value = Math.round(item.y);
@@ -2124,7 +2124,7 @@ addFileButton.addEventListener("click", () => {
   function addObject() {
     const size = screenSize();
     const id = nextId++;
-    const item = { id, type: "text", name: (fields.name.value.trim() && fields.name.value.trim() !== "Text 1" ? fields.name.value.trim() : "Text " + id), text: fields.text.value || "New text", x: Math.min(100, size.width), y: Math.min(100, size.height), size: Math.max(8, Number(fields.size.value) || 24), color: fields.color.value || "#ffffff" };
+    const item = { id, type: "text", name: (fields.name.value.trim() && fields.name.value.trim() !== "Text 1" ? fields.name.value.trim() : "Text " + id), text: fields.text.value || "New text", x: Math.min(100, size.width), y: Math.min(100, size.height), size: Math.max(1, Math.min(120, Number(fields.size.value) || 24)), color: fields.color.value || "#ffffff" };
     objects.push(item);
     selectedId = item.id;
     syncFields();
@@ -2144,7 +2144,7 @@ addFileButton.addEventListener("click", () => {
     const x = (clientX - rect.left) / rect.width * size.width;
     const y = (clientY - rect.top) / rect.height * size.height;
     const id = nextId++;
-    const item = { id, type: "text", name: (fields.name.value.trim() && fields.name.value.trim() !== "Text 1" ? fields.name.value.trim() : "Text " + id), text: fields.text.value || "Text", x, y, size: Math.max(8, Number(fields.size.value) || 24), color: fields.color.value || "#ffffff" };
+    const item = { id, type: "text", name: (fields.name.value.trim() && fields.name.value.trim() !== "Text 1" ? fields.name.value.trim() : "Text " + id), text: fields.text.value || "Text", x, y, size: Math.max(1, Math.min(120, Number(fields.size.value) || 24)), color: fields.color.value || "#ffffff" };
     objects.push(item); selectedId = item.id; syncFields(); renderObjects();
   }
   document.querySelectorAll(".shape-tool").forEach(button=>button.addEventListener("click",()=>{
@@ -2221,10 +2221,13 @@ addFileButton.addEventListener("click", () => {
   map.addEventListener("pointercancel", () => { drag = null; });
   for (const field of Object.values(fields)) {
     field.addEventListener("input", () => {
-      if (field === fields.text || field === fields.color || field === fields.size || field === fields.name) applyFields();
+      if (field === fields.text || field === fields.color || field === fields.name) applyFields();
     });
     field.addEventListener("keydown", event => { if (event.key === "Enter") applyFields(); });
   }
+  // Commit font size only after the complete number has been entered.
+  fields.size.addEventListener("change", applyFields);
+  fields.size.addEventListener("blur", applyFields);
   editor.addEventListener("input", updateMapSize);
   updateMapSize();
 })();
