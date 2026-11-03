@@ -1627,31 +1627,7 @@ function runCode() {
   const started = performance.now();
   try {
     const source = editor.value
-      // Convert plain Delta text commands into canvas drawing commands.
-      .replace(/^([ \\t]*)text\\(\\s*:([^:\\r\\n]*):\\s*\\)[ \\t]*$/gm, (_, indent, message) => {
-        const parts = message.match(/^(.*?)(?:\\s*\\+\\s*\\/([A-Za-z_][A-Za-z0-9_]*)\\/)?\\s*$/);
-        const textPart = JSON.stringify((parts?.[1] ?? message).trimEnd());
-        const value = parts?.[2] ? textPart + " + String(" + parts[2] + ")" : textPart;
-        return indent + "centerText(" + value + ")";
-      })
-      .replace(/^([ \\t]*)text\\(\\s*:([^:\\r\\n]*):\\s*(?:"([^"]*)"|'([^']*)')\\s*:\\s*\\)[ \\t]*$/gm, (_, indent, message, doubleProps, singleProps) => {
-        const properties = doubleProps ?? singleProps ?? "";
-        const getProperty = (key, fallback) => {
-          const match = properties.match(new RegExp("(?:^|,)\\\\s*" + key + "\\\\s*:\\\\s*([^,]+)", "i"));
-          return match ? match[1].trim() : fallback;
-        };
-        const color = getProperty("color", '"#ffffff"').replace(/^["']|["']$/g, "");
-        const size = Math.max(8, Number(getProperty("size", "24")) || 24);
-        const x = Number(getProperty("x", "0")) || 0;
-        const y = Number(getProperty("y", "0")) || 0;
-        const hasX = /(?:^|,)\\s*x\\s*:/i.test(properties);
-        const hasY = /(?:^|,)\\s*y\\s*:/i.test(properties);
-        const objectName = getProperty("name", '""').replace(/^["']|["']$/g, "");
-        return indent + "drawText(" + JSON.stringify(message) + ", " + x + ", " + y + ", " + JSON.stringify(color) + ", " + size + ", " + (!hasX && !hasY) + ", " + JSON.stringify(objectName) + ")";
-      })
-      .replace(/^([ \\t]*)text\\(\\s*:([^:\\r\\n]*):\\s*,\\s*name\\s*:\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*\\)\\s*$/gm, (_, indent, message, objectName) =>
-        indent + "drawText(" + JSON.stringify(message) + ", 0, 0, \"#ffffff\", 24, true, " + JSON.stringify(objectName) + ")"
-      )
+      // Text commands are converted after the other Delta shorthand rules.
       // Allow simple one-line indented-style conditions without requiring braces.
       .replace(/^([ \t]*)if(\d*)\s+(.+?)\s*\r?\n([ \t]*)([^\r\n]+)$/gm, (whole, indent, number, condition, nextIndent, nextLine) => {
         if (condition.includes("{") || nextLine.trim().startsWith("else")) return whole;
@@ -1690,6 +1666,7 @@ function runCode() {
         return indent + "triangle(" + [loc[0]||"100",loc[1]||"100",size,color,(settings.speed??"3.5"),movement===undefined?"null":movement,JSON.stringify(objectName)].join(",") + ")";
       })
       .replace(/^([ \t]*)delete\s*\[\s*([A-Za-z_][A-Za-z0-9_]*)\s*\][ \t]*$/gm, (_, indent, objectName) => indent + "delete(" + JSON.stringify(objectName) + ")")
+      .replace(/^([ \t]*)delete\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)[ \t]*$/gm, (_, indent, objectName) => indent + "delete(" + JSON.stringify(objectName) + ")")
       .replace(/^([ \t]*)square\s*\*size\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareSize(" + args + ")")      .replace(/^([ \t]*)square\s*\*location\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareLocation(" + args + ")")
       .replace(/^([ \t]*)square\s*\*speed\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareSpeed(" + args + ")")
       .replace(/^([ \t]*)square\s*\*movement\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "moveSquare(" + args + ")")
@@ -1747,6 +1724,10 @@ function runCode() {
         const objectName = getProperty("name", '""').replace(/^["']|["']$/g, "");
         return indent + "drawText(" + JSON.stringify(message) + ", " + x + ", " + y + ", " + JSON.stringify(color) + ", " + size + ", " + (!hasX && !hasY) + ", " + JSON.stringify(objectName) + ")";
       })
+      // Named text shorthand: text(:Message:, name: label)
+      .replace(/^([ \t]*)text\(\s*:([^:\r\n]*):\s*,\s*name\s*:\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)[ \t]*$/gm, (_, indent, message, objectName) =>
+        indent + "drawText(" + JSON.stringify(message.trim()) + ", 0, 0, \"#ffffff\", 24, true, " + JSON.stringify(objectName) + ")"
+      )
       // Safety fallback: plain text syntax must be converted into on-screen text.
       .replace(/^([ \t]*)text\(\s*:([^:\\r\\n]*):\s*\)[ \t]*$/gm, (_, indent, message) =>
         indent + "centerText(" + JSON.stringify(message.trimEnd()) + ")"
