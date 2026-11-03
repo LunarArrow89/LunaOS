@@ -1689,7 +1689,7 @@ function runCode() {
         return indent + "ask(" + JSON.stringify(inside) + ")";
       })
       .replace(/^([ \t]*)text\(\s*:([\s\S]*?)\s*\)[ \t]*$/gm, (whole, indent, inside) => {
-        let message = inside, properties = "", objectName = "";
+        let message = inside.replace(/:\s*$/, ""), properties = "", objectName = "";
         const named = inside.match(/^(.*?):\s*,\s*name\s*:\s*([A-Za-z_][A-Za-z0-9_]*)\s*$/);
         const quoted = inside.match(/^(.*?):\s*(["'])([\s\S]*?)\2\s*:\s*$/);
         if (named) { message = named[1]; objectName = named[2]; }
