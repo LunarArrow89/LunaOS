@@ -1060,7 +1060,7 @@ function renderHighlights() {
     const code = commentAt >= 0 ? line.slice(0, commentAt) : line;
     const comment = commentAt >= 0 ? line.slice(commentAt) : "";
     let out = "";
-    const pattern = /:([^:]*):|\/([A-Za-z_][A-Za-z0-9_]*)\/|\b(screen|background|wait)\b|\b(square|triangle|rect|circle|text)\b|\b(movement|location|size|color|speed)\b|\b(let)(\s+)([A-Za-z_][A-Za-z0-9_]*)?|"[^"]*"|'[^']*'/g;
+    const pattern = /:([^:]*):|\/([A-Za-z_][A-Za-z0-9_]*)\/|\b(screen|background|wait|delete)\b|\b(square|triangle|rect|circle|text)\b|\b(movement|location|size|color|speed)\b|\b(let)(\s+)([A-Za-z_][A-Za-z0-9_]*)?|"[^"]*"|'[^']*'/g;
     let lastIndex = 0;
     let match;
     while ((match = pattern.exec(code)) !== null) {
@@ -1490,6 +1490,7 @@ class DeltaParser {
       const legacySpeed = legacy && typeof args[3] === "number";
       const shape = {
         type:"square",
+        name:String(args[legacySpeed?6:legacy?5:2]??""),
         x:legacy?(Number(args[0])||0):runtimeSquareSettings.x,
         y:legacy?(Number(args[1])||0):runtimeSquareSettings.y,
         size:legacy?Math.max(0,Number(args[2])||0):runtimeSquareSettings.size,
@@ -1503,18 +1504,19 @@ class DeltaParser {
     }
     if (name === "moveRect") {
       const speed = Math.max(0, Number(args[5]) || 3.5);
-      runtimeScene.push({type:"rect",x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff"),moving:true,speed,controls:parseMovementControls(args[6])});
+      runtimeScene.push({type:"rect",name:String(args[7]??""),x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff"),moving:true,speed,controls:parseMovementControls(args[6])});
       startRuntimeMovement(); drawRuntimeScene(); return null;
     }
     if (name === "moveCircle") {
       const radius=Math.max(0,Number(args[2])||0);
-      runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius,color:String(args[3]??"#ffffff"),moving:true,speed:Math.max(0,Number(args[4])||3.5),controls:parseMovementControls(args[5])});
+      runtimeScene.push({type:"circle",name:String(args[6]??""),x:Number(args[0])||0,y:Number(args[1])||0,radius,color:String(args[3]??"#ffffff"),moving:true,speed:Math.max(0,Number(args[4])||3.5),controls:parseMovementControls(args[5])});
       startRuntimeMovement(); drawRuntimeScene(); return null;
     }
-    if (name === "triangle") { const moving=args[5]!==undefined&&args[5]!==null; runtimeScene.push({type:"triangle",x:Number(args[0])||0,y:Number(args[1])||0,size:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving,speed:Math.max(0,Number(args[4])||3.5),controls:moving?parseMovementControls(args[5]):defaultMovementControls()}); if(moving)startRuntimeMovement(); drawRuntimeScene(); return null; }
-    if (name === "rect") { runtimeScene.push({type:"rect",x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff"),moving:false,speed:0,controls:defaultMovementControls()}); drawRuntimeScene(); return null; }
-    if (name === "circle") { runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving:false,speed:0,controls:defaultMovementControls()}); drawRuntimeScene(); return null; }
-    if (name === "drawText") { runtimeScene.push({type:"text",value:String(args[0]??""),x:Number(args[1])||0,y:Number(args[2])||0,color:String(args[3]??"#ffffff"),size:Math.max(8,Number(args[4])||24),centered:Boolean(args[5])}); drawRuntimeScene(); return null; }
+    if (name === "triangle") { const moving=args[5]!==undefined&&args[5]!==null; runtimeScene.push({type:"triangle",name:String(args[6]??""),x:Number(args[0])||0,y:Number(args[1])||0,size:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving,speed:Math.max(0,Number(args[4])||3.5),controls:moving?parseMovementControls(args[5]):defaultMovementControls()}); if(moving)startRuntimeMovement(); drawRuntimeScene(); return null; }
+    if (name === "rect") { runtimeScene.push({type:"rect",name:String(args[5]??""),x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff"),moving:false,speed:0,controls:defaultMovementControls()}); drawRuntimeScene(); return null; }
+    if (name === "circle") { runtimeScene.push({type:"circle",name:String(args[4]??""),x:Number(args[0])||0,y:Number(args[1])||0,radius:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving:false,speed:0,controls:defaultMovementControls()}); drawRuntimeScene(); return null; }
+    if (name === "drawText") { runtimeScene.push({type:"text",name:String(args[6]??""),value:String(args[0]??""),x:Number(args[1])||0,y:Number(args[2])||0,color:String(args[3]??"#ffffff"),size:Math.max(8,Number(args[4])||24),centered:Boolean(args[5])}); drawRuntimeScene(); return null; }
+    if (name === "delete") { const objectName=String(args[0]??""); const before=runtimeScene.length; runtimeScene=runtimeScene.filter(object=>object.name!==objectName); if(runtimeScene.length===before) throw new Error('No object named "'+objectName+'" exists.'); drawRuntimeScene(); return null; }
 
     if (name === "clear") { runtimeScene=[]; drawRuntimeScene(); return null; }
     throw new Error('Unknown function "'+name+'". Use screen, background, square, rect, circle, triangle, text, or clear.');
@@ -1628,34 +1630,36 @@ function runCode() {
       .replace(/^([ \t]*)(square|rect|circle|triangle)\s*\[([\s\S]*?)\][ \t]*$/gm, (_, indent, type, body) => {
         const settings = {};
         for (const line of body.split(/\r?\n/).map(line => line.trim()).filter(Boolean)) {
-          const match = line.match(/^(location|size|width|height|radius|color|speed|movement)\s*\((.*)\)\s*$/);
+          const match = line.match(/^(location|size|width|height|radius|color|speed|movement|name)\s*\((.*)\)\s*$/);
           if (!match) throw new Error("Unknown " + type + " setting: " + line);
           settings[match[1]] = match[2];
         }
+        const objectName = settings.name ? settings.name.replace(/^["']|["']$/g, "") : "";
         const loc = settings.location ? settings.location.split(",").map(v=>v.trim()) : ["100","100"];
         const color = settings.color ?? '"#ffffff"';
         const movement = settings.movement;
         if (type === "square") {
           const size = settings.size ?? "40";
-          const args = [loc[0]||"100",loc[1]||"100",size,color];
-          if (movement !== undefined) return indent + "moveSquare(" + args.join(",") + "," + (settings.speed ?? "3.5") + "," + movement + ")";
+          const args = [loc[0]||"100",loc[1]||"100",size,color,JSON.stringify(objectName)];
+          if (movement !== undefined) return indent + "moveSquare(" + args.slice(0,4).join(",") + "," + (settings.speed ?? "3.5") + "," + movement + "," + args[4] + ")";
           return indent + "square(" + args.join(",") + ")";
         }
         if (type === "rect") {
           const width = settings.width ?? settings.size ?? "60", height = settings.height ?? settings.size ?? "40";
-          const args = [loc[0]||"100",loc[1]||"100",width,height,color];
-          if (movement !== undefined) return indent + "moveRect(" + args.join(",") + "," + (settings.speed ?? "3.5") + "," + movement + ")";
+          const args = [loc[0]||"100",loc[1]||"100",width,height,color,JSON.stringify(objectName)];
+          if (movement !== undefined) return indent + "moveRect(" + args.slice(0,5).join(",") + "," + (settings.speed ?? "3.5") + "," + movement + "," + args[5] + ")";
           return indent + "rect(" + args.join(",") + ")";
         }
         if (type === "circle") {
           const radius = settings.radius ?? settings.size ?? "20";
-          const args = [loc[0]||"100",loc[1]||"100",radius,color];
-          if (movement !== undefined) return indent + "moveCircle(" + args.join(",") + "," + (settings.speed ?? "3.5") + "," + movement + ")";
+          const args = [loc[0]||"100",loc[1]||"100",radius,color,JSON.stringify(objectName)];
+          if (movement !== undefined) return indent + "moveCircle(" + args.slice(0,4).join(",") + "," + (settings.speed ?? "3.5") + "," + movement + "," + args[4] + ")";
           return indent + "circle(" + args.join(",") + ")";
         }
         const size = settings.size ?? "40";
-        return indent + "triangle(" + [loc[0]||"100",loc[1]||"100",size,color,(settings.speed??"3.5"),movement===undefined?"null":movement].join(",") + ")";
+        return indent + "triangle(" + [loc[0]||"100",loc[1]||"100",size,color,(settings.speed??"3.5"),movement===undefined?"null":movement,JSON.stringify(objectName)].join(",") + ")";
       })
+      .replace(/^([ \t]*)delete\s*\[\s*([A-Za-z_][A-Za-z0-9_]*)\s*\][ \t]*$/gm, (_, indent, objectName) => indent + "delete(" + JSON.stringify(objectName) + ")")
       .replace(/^([ \t]*)square\s*\*size\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareSize(" + args + ")")      .replace(/^([ \t]*)square\s*\*location\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareLocation(" + args + ")")
       .replace(/^([ \t]*)square\s*\*speed\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareSpeed(" + args + ")")
       .replace(/^([ \t]*)square\s*\*movement\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "moveSquare(" + args + ")")
@@ -1678,7 +1682,7 @@ function runCode() {
         return indent + "ask(" + JSON.stringify(inside) + ")";
       })
       .replace(/^([ \t]*)ask:(.*):[ \t]*$/gm, (_, indent, message) => indent + "ask(" + JSON.stringify(message) + ")")
-      .replace(/^([ \t]*)text\(\s*:([^:]*)\:\s*(["'])(.*?)\3\s*\)[ \t]*$/gm, (_, indent, message, quote, properties) => {
+      .replace(/^([ \t]*)text\(\s*:([\s\S]*?):\s*(["'])(.*?)\3\s*\)[ \t]*$/gm, (_, indent, message, quote, properties) => {
         const getProperty = (key, fallback) => {
           const match = properties.match(new RegExp("(?:^|,)\\s*" + key + "\\s*:\\s*([^,]+)", "i"));
           return match ? match[1].trim() : fallback;
@@ -1693,7 +1697,8 @@ function runCode() {
         const x = hasX ? (Number(getProperty("x", "0")) || 0) : screenWidth / 2;
         const y = hasY ? (Number(getProperty("y", "0")) || 0) : screenHeight / 2;
         const centered = !hasX && !hasY;
-        return indent + "drawText(" + JSON.stringify(message) + ", " + x + ", " + y + ", " + JSON.stringify(color) + ", " + size + ", " + centered + ")";
+        const objectName = getProperty("name", '""').replace(/^["']|["']$/g, "");
+        return indent + "drawText(" + JSON.stringify(message) + ", " + x + ", " + y + ", " + JSON.stringify(color) + ", " + size + ", " + centered + ", " + JSON.stringify(objectName) + ")";
       })
       // Safety fallback: plain text syntax must be converted into on-screen text.
       .replace(/^([ \t]*)text\(\s*:([^:\\r\\n]*):\s*\)[ \t]*$/gm, (_, indent, message) =>
