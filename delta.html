@@ -1490,7 +1490,7 @@ class DeltaParser {
       const legacySpeed = legacy && typeof args[3] === "number";
       const shape = {
         type:"square",
-        name:String(args[legacySpeed?6:legacy?5:2]??""),
+        name:String(args[configured?6:legacySpeed?6:legacy?4:2]??""),
         x:legacy?(Number(args[0])||0):runtimeSquareSettings.x,
         y:legacy?(Number(args[1])||0):runtimeSquareSettings.y,
         size:legacy?Math.max(0,Number(args[2])||0):runtimeSquareSettings.size,
