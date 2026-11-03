@@ -2020,7 +2020,7 @@ addFileButton.addEventListener("click", () => {
   widthInput.addEventListener("change",applyScreenDimensions);
   heightInput.addEventListener("change",applyScreenDimensions);
   function selected() { return objects.find(item => item.id === selectedId); }
-  function renderObjects() {
+  function renderObjects(preserveInspectorValues = false) {
     map.querySelectorAll(".map-text-object, .map-shape-object").forEach(el => el.remove());
     const size = screenSize();
     for (const item of objects) {
@@ -2084,7 +2084,7 @@ addFileButton.addEventListener("click", () => {
       inspectorFields.hidden = !hasSelection;
       inspectorFields.style.display = hasSelection ? "flex" : "none";
     }
-    if (hasSelection) syncFields();
+    if (hasSelection && !preserveInspectorValues) syncFields();
     status.textContent = objects.length ? objects.length + " text object" + (objects.length === 1 ? "" : "s") + (hasSelection ? " · selected" : "") : "No text objects yet.";
   }
   function syncFields() {
@@ -2117,7 +2117,9 @@ addFileButton.addEventListener("click", () => {
     item.color = fields.color.value || "#ffffff";
     fields.x.value = Math.round(item.x);
     fields.y.value = Math.round(item.y);
-    renderObjects();
+    // Keep the value being typed in the inspector. Re-syncing the input
+    // after every keystroke forced multi-digit sizes (for example 64) back to 8.
+    renderObjects(true);
   }
   function addObject() {
     const size = screenSize();
