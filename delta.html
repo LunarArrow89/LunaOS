@@ -798,8 +798,8 @@ square(80, 80, 48, "#72e0b1")</pre>
         <p class="help-intro">Use <code>moveSquare(color)</code> to make a square you can control. WASD and the arrow keys work by default.</p>
         <pre>screen(640, 400)
 background("#10131c")
-moveSquare("#72e0b1")</pre>
-        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;moveSquare(&quot;#72e0b1&quot;)">Copy</button><button class="quiet-button use-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;moveSquare(&quot;#72e0b1&quot;)">Try in editor</button></div>
+moveSquare("w,arrowup|s,arrowdown|a,arrowleft|d,arrowright", "#72e0b1")</pre>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;moveSquare(&quot;w,arrowup|s,arrowdown|a,arrowleft|d,arrowright&quot;, &quot;#72e0b1&quot;)">Copy</button><button class="quiet-button use-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;moveSquare(&quot;w,arrowup|s,arrowdown|a,arrowleft|d,arrowright&quot;, &quot;#72e0b1&quot;)">Try in editor</button></div>
 
         <h3>4. Change the square</h3>
         <p class="help-intro">Set its size, starting position, and movement speed before calling <code>moveSquare</code>.</p>
@@ -1018,7 +1018,10 @@ const oldStarterCode = `// Your first Delta program
 screen(640, 400)
 background("#10131c")
 text(:Hello!:)`;
-editor.value = previousCode.includes('print("Welcome to Delta!")') || previousCode.trim() === oldStarterCode ? starterCode : (previousCode || starterCode);
+editor.value = previousCode.includes('print("Welcome to Delta!")') || previousCode.trim() === oldStarterCode || previousCode.trim() === `// Your first Delta program
+screen(640, 400)
+background("#10131c")
+centerText(:Hello!)` ? starterCode : (previousCode || starterCode);
 if (!safeStorageSet("delta-code", editor.value)) {
   saveStatus.textContent = "Storage unavailable — your code may not persist after closing";
 }
