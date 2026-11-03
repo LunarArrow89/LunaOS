@@ -858,7 +858,19 @@ wait(0, 0, 5)
 text(:Five seconds later!:)</pre>
         <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="text(:Starting...:)&#10;wait(0, 0, 5)&#10;text(:Five seconds later!:)">Copy</button><button class="quiet-button use-example" data-example="text(:Starting...:)&#10;wait(0, 0, 5)&#10;text(:Five seconds later!:)">Try in editor</button></div>
 
-        <h3>11. Clear the screen</h3>
+        <h3>11. Name and delete objects</h3>
+        <p class="help-intro">Give text a name with the <code>name</code> option. Give a square a name with <code>name("...")</code> inside its settings. Remove an object by writing <code>delete[name]</code>.</p>
+        <pre>text(:Waiting simulator: "color: #ff0000, size: 24, x: 225, y: 60, name: status")
+square[
+  location(100, 120)
+  size(40)
+  color("#72e0b1")
+  name("player")
+]
+delete[player]</pre>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="text(:Waiting simulator: &quot;color: #ff0000, size: 24, x: 225, y: 60, name: status&quot;)&#10;square[&#10;  location(100, 120)&#10;  size(40)&#10;  color(&quot;#72e0b1&quot;)&#10;  name(&quot;player&quot;)&#10;]&#10;delete[player]">Copy</button><button class="quiet-button use-example" data-example="text(:Waiting simulator: &quot;color: #ff0000, size: 24, x: 225, y: 60, name: status&quot;)&#10;square[&#10;  location(100, 120)&#10;  size(40)&#10;  color(&quot;#72e0b1&quot;)&#10;  name(&quot;player&quot;)&#10;]&#10;delete[player]">Try in editor</button></div>
+
+        <h3>12. Clear the screen</h3>
         <p class="help-intro">Use <code>clear()</code> to remove every shape and text object from the current scene.</p>
         <pre>screen(640, 400)
 background("#10131c")
