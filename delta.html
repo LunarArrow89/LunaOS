@@ -1712,6 +1712,23 @@ function runCode() {
         const objectName = getProperty("name", '""').replace(/^["']|["']$/g, "");
         return indent + "drawText(" + JSON.stringify(message) + ", " + x + ", " + y + ", " + JSON.stringify(color) + ", " + size + ", " + centered + ", " + JSON.stringify(objectName) + ")";
       })
+      .replace(/^([ \\t]*)text\\(\\s*:([^:\\r\\n]*):\\s*,\\s*([^)]*)\\)[ \\t]*$/gm, (_, indent, message, properties) => {
+        const getProperty = (key, fallback) => {
+          const match = properties.match(new RegExp("(?:^|,)\\\\s*" + key + "\\\\s*:\\\\s*([^,]+)", "i"));
+          return match ? match[1].trim() : fallback;
+        };
+        const color = getProperty("color", "#ffffff").replace(/^["']|["']$/g, "");
+        const size = Math.max(8, Number(getProperty("size", "24")) || 24);
+        const hasX = /(?:^|,)\\s*x\\s*:/i.test(properties);
+        const hasY = /(?:^|,)\\s*y\\s*:/i.test(properties);
+        const screenMatch = editor.value.match(/^\\s*screen\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)/m);
+        const screenWidth = Number(screenMatch?.[1]) || 640;
+        const screenHeight = Number(screenMatch?.[2]) || 400;
+        const x = hasX ? (Number(getProperty("x", "0")) || 0) : screenWidth / 2;
+        const y = hasY ? (Number(getProperty("y", "0")) || 0) : screenHeight / 2;
+        const objectName = getProperty("name", '""').replace(/^["']|["']$/g, "");
+        return indent + "drawText(" + JSON.stringify(message) + ", " + x + ", " + y + ", " + JSON.stringify(color) + ", " + size + ", " + (!hasX && !hasY) + ", " + JSON.stringify(objectName) + ")";
+      })
       // Safety fallback: plain text syntax must be converted into on-screen text.
       .replace(/^([ \t]*)text\(\s*:([^:\\r\\n]*):\s*\)[ \t]*$/gm, (_, indent, message) =>
         indent + "centerText(" + JSON.stringify(message.trimEnd()) + ")"
