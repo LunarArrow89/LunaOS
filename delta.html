@@ -1688,28 +1688,28 @@ function runCode() {
         if (joined) return indent + "ask(" + JSON.stringify(joined[1].trimEnd() + " ") + " + String(" + joined[2] + "))";
         return indent + "ask(" + JSON.stringify(inside) + ")";
       })
-      .replace(/^([ \\t]*)text\\(\\s*:([\\s\\S]*?)\\s*\\)[ \\t]*$/gm, (whole, indent, inside) => {
+      .replace(/^([ \t]*)text\(\s*:([\s\S]*?)\s*\)[ \t]*$/gm, (whole, indent, inside) => {
         let message = inside, properties = "", objectName = "";
-        const named = inside.match(/^(.*?):\\s*,\\s*name\\s*:\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*$/);
-        const quoted = inside.match(/^(.*?):\\s*(["'])([\\s\\S]*?)\\2\\s*:\\s*$/);
+        const named = inside.match(/^(.*?):\s*,\s*name\s*:\s*([A-Za-z_][A-Za-z0-9_]*)\s*$/);
+        const quoted = inside.match(/^(.*?):\s*(["'])([\s\S]*?)\2\s*:\s*$/);
         if (named) { message = named[1]; objectName = named[2]; }
         else if (quoted) { message = quoted[1]; properties = quoted[3]; }
         const getProperty = (key, fallback) => {
-          const match = properties.match(new RegExp("(?:^|,)\\\\s*" + key + "\\\\s*:\\\\s*([^,]+)", "i"));
+          const match = properties.match(new RegExp("(?:^|,)\\s*" + key + "\\s*:\\s*([^,]+)", "i"));
           return match ? match[1].trim().replace(/^["']|["']$/g, "") : fallback;
         };
-        const hasX = /(?:^|,)\\s*x\\s*:/i.test(properties), hasY = /(?:^|,)\\s*y\\s*:/i.test(properties);
-        const screenMatch = editor.value.match(/^\\s*screen\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)/m);
+        const hasX = /(?:^|,)\s*x\s*:/i.test(properties), hasY = /(?:^|,)\s*y\s*:/i.test(properties);
+        const screenMatch = editor.value.match(/^\s*screen\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/m);
         const screenWidth = Number(screenMatch?.[1]) || 640, screenHeight = Number(screenMatch?.[2]) || 400;
         const x = hasX ? (Number(getProperty("x", "0")) || 0) : screenWidth / 2;
         const y = hasY ? (Number(getProperty("y", "0")) || 0) : screenHeight / 2;
         const color = getProperty("color", "#ffffff"), size = Math.max(8, Number(getProperty("size", "24")) || 24);
         objectName = getProperty("name", objectName);
         const centered = !hasX && !hasY;
-        const parts = message.match(/^(.*?)(?:\\s*\\+\\s*\\/([A-Za-z_][A-Za-z0-9_]*)\\/)?\\s*$/);
+        const parts = message.match(/^(.*?)(?:\s*\+\s*\/([A-Za-z_][A-Za-z0-9_]*)\/)?\s*$/);
         const textValue = parts?.[2] ? JSON.stringify((parts[1] ?? message).trimEnd()) + " + String(" + parts[2] + ")" : JSON.stringify(message.trim());
         return indent + "drawText(" + textValue + ", " + x + ", " + y + ", " + JSON.stringify(color) + ", " + size + ", " + centered + ", " + JSON.stringify(objectName) + ")";
-      });
+      })
     const parser = new DeltaParser(tokenize(source), value => addOutput(formatValue(value)));
     parser.run();
     addOutput("✓ Finished in " + Math.round(performance.now() - started) + " ms", "success");
