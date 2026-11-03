@@ -262,6 +262,17 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
   border-bottom: 0;
 }
 .view-tab:hover { color: var(--text); background: #252934; }
+.view-tab { cursor: pointer; }
+.tutorial-actions { display:flex; gap:8px; margin-top:-3px; flex-wrap:wrap; }
+.tutorial-actions button { font-size:11px; padding:7px 11px; }
+.help-panel[hidden] { display:none !important; }
+.workspace.tutorial-mode { grid-template-columns:minmax(0,1fr); }
+.workspace.tutorial-mode .files-panel { display:none; }
+.workspace.tutorial-mode .help-panel { display:block; }
+.workspace.tutorial-mode .editor-panel,
+.workspace.tutorial-mode .output-panel { display:none; }
+.help-content > p:not(.help-intro):not(.help-foot) { color:var(--muted); }
+
 .view-tab.active {
   color: var(--text);
   background: var(--panel);
@@ -731,6 +742,10 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
   </header>
 
 
+  <nav class="view-tabs" aria-label="Editor views">
+    <button class="view-tab active" id="codeTab" type="button" aria-selected="true">Code</button>
+    <button class="view-tab" id="tutorialTab" type="button" aria-selected="false">Tutorial</button>
+  </nav>
   <main class="workspace" id="workspace">
     <aside class="files-panel" aria-label="Project files">
       <div class="files-heading"><span>FILES</span><button id="addFileButton" type="button" aria-label="Add file" title="Add file">+</button></div>
@@ -759,6 +774,93 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
       </div>
       <div id="output" class="output" role="log" aria-live="polite"><p class="placeholder">Press Run in window to execute your Delta program.</p></div>
       <div class="output-footer"><span id="runStatus">Ready</span><span>Delta playground</span></div>
+    </section>
+
+    <section class="help-panel" id="tutorialPanel" aria-label="Delta language tutorial" hidden>
+      <div class="panel-heading"><span>DELTA- TUTORIAL</span><span class="panel-note">LANGUAGE GUIDE</span></div>
+      <div class="help-content">
+        <p class="help-intro">Learn Delta- one command at a time. Each example is real Delta code. Press <kbd>Copy</kbd> to copy it, or <kbd>Try in editor</kbd> to put it into your code.</p>
+
+        <h3>1. Your first program</h3>
+        <p class="help-intro">Every game starts by setting a screen size and background color.</p>
+        <pre>screen(640, 400)
+background("#10131c")</pre>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)">Copy</button><button class="quiet-button use-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)">Try in editor</button></div>
+
+        <h3>2. Draw a square</h3>
+        <p class="help-intro">Use <code>square(x, y, size, color)</code> to draw a still square. Coordinates start at the top-left corner.</p>
+        <pre>screen(640, 400)
+background("#10131c")
+square(80, 80, 48, "#72e0b1")</pre>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;square(80, 80, 48, &quot;#72e0b1&quot;)">Copy</button><button class="quiet-button use-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;square(80, 80, 48, &quot;#72e0b1&quot;)">Try in editor</button></div>
+
+        <h3>3. Move a square</h3>
+        <p class="help-intro">Use <code>moveSquare(color)</code> to make a square you can control. WASD and the arrow keys work by default.</p>
+        <pre>screen(640, 400)
+background("#10131c")
+moveSquare("#72e0b1")</pre>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;moveSquare(&quot;#72e0b1&quot;)">Copy</button><button class="quiet-button use-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;moveSquare(&quot;#72e0b1&quot;)">Try in editor</button></div>
+
+        <h3>4. Change the square</h3>
+        <p class="help-intro">Set its size, starting position, and movement speed before calling <code>moveSquare</code>.</p>
+        <pre>screen(640, 400)
+background("#10131c")
+setSquareSize(56)
+setSquareLocation(120, 90)
+setSquareSpeed(5)
+moveSquare("#ffd866")</pre>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;setSquareSize(56)&#10;setSquareLocation(120, 90)&#10;setSquareSpeed(5)&#10;moveSquare(&quot;#ffd866&quot;)">Copy</button><button class="quiet-button use-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;setSquareSize(56)&#10;setSquareLocation(120, 90)&#10;setSquareSpeed(5)&#10;moveSquare(&quot;#ffd866&quot;)">Try in editor</button></div>
+
+        <h3>5. Other shapes</h3>
+        <p class="help-intro">Draw rectangles, circles, and triangles with coordinates, dimensions, and a color.</p>
+        <pre>screen(640, 400)
+background("#10131c")
+rect(40, 50, 120, 60, "#ff6b6b")
+circle(250, 100, 32, "#72e0b1")
+triangle(360, 60, 64, "#ffd866")</pre>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;rect(40, 50, 120, 60, &quot;#ff6b6b&quot;)&#10;circle(250, 100, 32, &quot;#72e0b1&quot;)&#10;triangle(360, 60, 64, &quot;#ffd866&quot;)">Copy</button><button class="quiet-button use-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;rect(40, 50, 120, 60, &quot;#ff6b6b&quot;)&#10;circle(250, 100, 32, &quot;#72e0b1&quot;)&#10;triangle(360, 60, 64, &quot;#ffd866&quot;)">Try in editor</button></div>
+
+        <h3>6. Add text</h3>
+        <p class="help-intro">Use <code>text(:your words:)</code> to display text. You can also set text color, size, and position using the text options syntax.</p>
+        <pre>screen(640, 400)
+background("#10131c")
+text(:Hello, Delta!:)</pre>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;text(:Hello, Delta!:)">Copy</button><button class="quiet-button use-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;text(:Hello, Delta!:)">Try in editor</button></div>
+
+        <h3>7. Variables and math</h3>
+        <p class="help-intro">Create a value with <code>let</code>. Reassign it later, and use normal math symbols.</p>
+        <pre>let score = 10
+score = score + 5
+print(score)</pre>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="let score = 10&#10;score = score + 5&#10;print(score)">Copy</button><button class="quiet-button use-example" data-example="let score = 10&#10;score = score + 5&#10;print(score)">Try in editor</button></div>
+
+        <h3>8. Make decisions</h3>
+        <p class="help-intro">Use <code>if</code> and <code>else</code> with comparison operators to choose what happens.</p>
+        <pre>let score = 15
+if score >= 10 {
+  print("You did it!")
+} else {
+  print("Keep trying!")
+}</pre>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="let score = 15&#10;if score &gt;= 10 {&#10;  print(&quot;You did it!&quot;)&#10;} else {&#10;  print(&quot;Keep trying!&quot;)&#10;}">Copy</button><button class="quiet-button use-example" data-example="let score = 15&#10;if score &gt;= 10 {&#10;  print(&quot;You did it!&quot;)&#10;} else {&#10;  print(&quot;Keep trying!&quot;)&#10;}">Try in editor</button></div>
+
+        <h3>9. Ask for a key</h3>
+        <p class="help-intro">Use <code>gather(key)</code> to wait for a key press and store its name in a variable. The program must be running in its game window.</p>
+        <pre>ask("Press any key")
+gather(key)
+print(key)</pre>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="ask(&quot;Press any key&quot;)&#10;gather(key)&#10;print(key)">Copy</button><button class="quiet-button use-example" data-example="ask(&quot;Press any key&quot;)&#10;gather(key)&#10;print(key)">Try in editor</button></div>
+
+        <h3>10. Clear the screen</h3>
+        <p class="help-intro">Use <code>clear()</code> to remove every shape and text object from the current scene.</p>
+        <pre>screen(640, 400)
+background("#10131c")
+square(80, 80, 48, "#72e0b1")
+clear()</pre>
+        <div class="tutorial-actions"><button class="quiet-button copy-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;square(80, 80, 48, &quot;#72e0b1&quot;)&#10;clear()">Copy</button><button class="quiet-button use-example" data-example="screen(640, 400)&#10;background(&quot;#10131c&quot;)&#10;square(80, 80, 48, &quot;#72e0b1&quot;)&#10;clear()">Try in editor</button></div>
+
+        <p class="help-foot">Tip: Press <kbd>Run in window</kbd> to launch your program. The moving square is controlled inside the game window. Use <kbd>Code</kbd> to return to the editor.</p>
+      </div>
     </section>
 
   </main>
@@ -796,6 +898,52 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
   </section>
   <script>
 const editor = document.getElementById("codeEditor");
+const workspace = document.getElementById("workspace");
+const codeTab = document.getElementById("codeTab");
+const tutorialTab = document.getElementById("tutorialTab");
+const tutorialPanel = document.getElementById("tutorialPanel");
+function setEditorView(view) {
+  const tutorial = view === "tutorial";
+  workspace.classList.toggle("tutorial-mode", tutorial);
+  tutorialPanel.hidden = !tutorial;
+  codeTab.classList.toggle("active", !tutorial);
+  tutorialTab.classList.toggle("active", tutorial);
+  codeTab.setAttribute("aria-selected", String(!tutorial));
+  tutorialTab.setAttribute("aria-selected", String(tutorial));
+}
+codeTab.addEventListener("click", () => setEditorView("code"));
+tutorialTab.addEventListener("click", () => setEditorView("tutorial"));
+tutorialPanel.addEventListener("click", async event => {
+  const button = event.target.closest("button[data-example]");
+  if (!button) return;
+  const example = button.dataset.example;
+  if (button.classList.contains("use-example")) {
+    editor.value = example;
+    editor.dispatchEvent(new Event("input", { bubbles: true }));
+    setEditorView("code");
+    editor.focus();
+    editor.setSelectionRange(editor.value.length, editor.value.length);
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(example);
+    const oldLabel = button.textContent;
+    button.textContent = "Copied!";
+    setTimeout(() => button.textContent = oldLabel, 1200);
+  } catch {
+    const helper = document.createElement("textarea");
+    helper.value = example;
+    helper.style.position = "fixed";
+    helper.style.opacity = "0";
+    document.body.appendChild(helper);
+    helper.select();
+    document.execCommand("copy");
+    helper.remove();
+    button.textContent = "Copied!";
+    setTimeout(() => button.textContent = "Copy", 1200);
+  }
+});
+
 const output = document.getElementById("output");
 // Keep Output strictly as a text/message log even if stale scripts try to inject a preview.
 function enforceTextOnlyOutput() {
@@ -860,10 +1008,10 @@ function saveCurrentProject() {
 projectName.value = safeStorageGet(PROJECT_NAME_KEY, projectName.value) || projectName.value;
 refreshProjects(safeStorageGet(PROJECT_NAME_KEY, ""));
 
-const starterCode = `// Your first Delta program
+const starterCode = `// Move the square with WASD or the arrow keys
 screen(640, 400)
 background("#10131c")
-centerText(:Hello!)`
+moveSquare("w,arrowup|s,arrowdown|a,arrowleft|d,arrowright", "#72e0b1")`
 
 const previousCode = safeStorageGet("delta-code", "") || "";
 const oldStarterCode = `// Your first Delta program
