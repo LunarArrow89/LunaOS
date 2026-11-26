@@ -1638,9 +1638,10 @@ function runCode() {
       .replace(/^([ \t]*)(square|rect|circle|triangle)\s*\[([\s\S]*?)\][ \t]*$/gm, (_, indent, type, body) => {
         const settings = {};
         for (const line of body.split(/\r?\n/).map(line => line.trim()).filter(Boolean)) {
-          const match = line.match(/^(location|size|width|height|radius|color|speed|movement|name)\s*\((.*)\)\s*$/);
+          const match = line.match(/^(location|size|width|height|radius|color|speed|movement)\s*\((.*)\)\s*$|^(name)\s*(?:\((.*)\)|(["'])(.*?)\5)\s*$/);
           if (!match) throw new Error("Unknown " + type + " setting: " + line);
-          settings[match[1]] = match[2];
+          if (match[3] === "name") settings.name = match[4] ?? match[6];
+          else settings[match[1]] = match[2];
         }
         const objectName = settings.name ? settings.name.replace(/^["']|["']$/g, "") : "";
         const loc = settings.location ? settings.location.split(",").map(v=>v.trim()) : ["100","100"];
@@ -1697,7 +1698,7 @@ function runCode() {
         if (named) { message = named[1]; objectName = named[2]; }
         else if (quoted) { message = quoted[1]; properties = quoted[3]; }
         const getProperty = (key, fallback) => {
-          const match = properties.match(new RegExp("(?:^|,)\\s*" + key + "\\s*:\\s*([^,]+)", "i"));
+          const match = properties.match(new RegExp("(?:^|,)\\s*" + key + "\\s*:?\\s*([^,]+)", "i"));
           return match ? match[1].trim().replace(/^["']|["']$/g, "") : fallback;
         };
         const hasX = /(?:^|,)\s*x\s*:/i.test(properties), hasY = /(?:^|,)\s*y\s*:/i.test(properties);
